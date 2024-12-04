@@ -10,8 +10,9 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    first_name: Mapped[str] = mapped_column(nullable=False)
+    last_name: Mapped[str] = mapped_column(nullable=False)
     username: Mapped[str] = mapped_column(nullable=False)
-    access_token: Mapped[str] = mapped_column(nullable=False)
-    refresh_token: Mapped[str] = mapped_column(nullable=False)
+    access_token: Mapped[str] = mapped_column(default="default", nullable=False)
+    refresh_token: Mapped[str] = mapped_column(default="default", nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(default=func.now())
