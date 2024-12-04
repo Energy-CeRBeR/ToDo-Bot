@@ -3,11 +3,13 @@ from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.state import default_state
 from aiogram.types import Message
 
-from src.users.lexicon import LEXICON_COMMANDS as USER_LEXICON_COMMANDS
+from .lexicon import LEXICON_COMMANDS as USER_LEXICON_COMMANDS
+from .services import UserService
 from src.database.repositories import UserRepository
 
-repository = UserRepository()
 router = Router()
+repository = UserRepository()
+user_service = UserService()
 
 
 @router.message(CommandStart(), StateFilter(default_state))
@@ -19,5 +21,3 @@ async def start_bot(message: Message):
         )
 
     await message.answer(USER_LEXICON_COMMANDS[message.text])
-
-
