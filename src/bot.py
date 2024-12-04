@@ -4,7 +4,6 @@ from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config_data.config import Config, load_config
-
 from src.users.handlers import router as user_router
 
 
