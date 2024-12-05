@@ -1,20 +1,10 @@
 from typing import Optional, Dict
-
 from httpx import AsyncClient
-
-from src.database.models import User
-from src.database.repository import UserRepository
 
 
 class UserService:
     def __init__(self):
         self.client = AsyncClient(base_url="https://energy-cerber.ru/user")
-
-    async def get_tg_user_by_id(self, user_id: int) -> Optional[User]:
-        return await UserRepository().get_user_by_id(user_id)
-
-    async def create_tg_user(self, user_id: int, username: str, first_name: str, last_name: str) -> Optional[User]:
-        return await UserRepository().create_user(user_id, username, first_name, last_name)
 
     async def get_current_user(self, access_token: str) -> Optional[Dict]:
         response = await self.client.get("/self", headers={"Authorization": f"Bearer {access_token}"})
@@ -31,6 +21,3 @@ class UserService:
         if response.status_code == 200:
             resp_dict = response.json()
             return resp_dict
-
-    async def logout_user(self, user_id: int):
-        await UserRepository().refresh_tokens(user_id, "default", "default")
