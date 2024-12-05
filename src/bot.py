@@ -4,7 +4,6 @@ from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config_data.config import Config, load_config
-
 from src.users.handlers import router as user_router
 
 
@@ -15,6 +14,8 @@ async def main():
     dp = Dispatcher(storage=storage)
 
     dp.include_router(user_router)
+
+    print("Starting!")
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
