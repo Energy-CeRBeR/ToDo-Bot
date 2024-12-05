@@ -7,6 +7,7 @@ from aiogram.types import Message
 from .states import AuthorizeState
 from .lexicon import LEXICON_COMMANDS as USER_LEXICON_COMMANDS, LEXICON as USER_LEXICON
 from .services import UserService
+from .keyboards import profile_keyboard
 
 router = Router()
 user_service = UserService()
@@ -53,10 +54,23 @@ async def get_password(message: Message, state: FSMContext):
 
     tokens = await user_service.login_user(email, password)
     if tokens:
-        await message.answer(text=USER_LEXICON["success_auth"])
         await state.update_data(
             access_token=tokens["access_token"],
             refresh_token=tokens["refresh_token"]
         )
+        await message.answer(text=USER_LEXICON["success_auth"], reply_markup=profile_keyboard())
     else:
         await message.answer(text=USER_LEXICON["invalid_auth"])
+
+
+@router.message(Command(commands="profile"), StateFilter(default_state))
+async def auth(message: Message, state: FSMContext):
+    user_data = await state.get_data()
+    user_dict = await user_service.get_current_user(user_data.setdefault("access_token", "default"))
+
+    if user_dict:
+        await message.answer(text=USER_LEXICON["success_auth"], reply_markup=profile_keyboard())
+        await message.answer(text=USER_LEXICON_COMMANDS[message.text]["already_authorized"])
+    else:
+        # Вывод сообщения о том, что пользователь не авторизирован. Либо можно создать миддлвари с проверкой на авторизацию
+        pass
