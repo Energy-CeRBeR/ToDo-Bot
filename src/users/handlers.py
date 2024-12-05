@@ -14,12 +14,6 @@ user_service = UserService()
 
 @router.message(CommandStart(), StateFilter(default_state))
 async def start_bot(message: Message):
-    user = await user_service.get_tg_user_by_id(message.from_user.id)
-    if not user:
-        await user_service.create_tg_user(
-            message.from_user.id, message.from_user.username, message.from_user.first_name, message.from_user.last_name
-        )
-
     await message.answer(USER_LEXICON_COMMANDS[message.text], parse_mode="Markdown")
 
 
@@ -30,14 +24,10 @@ async def help_info(message: Message):
 
 @router.message(Command(commands="auth"), StateFilter(default_state))
 async def auth(message: Message, state: FSMContext):
-    user = await user_service.get_tg_user_by_id(message.from_user.id)
-    if not user:
-        await user_service.create_tg_user(
-            message.from_user.id, message.from_user.username, message.from_user.first_name, message.from_user.last_name
-        )
+    user_data = await state.get_data()
+    user_dict = await user_service.get_current_user(user_data.setdefault("access_token", "default"))
 
-    user_data = await user_service.get_current_user(user.access_token)
-    if user_data:
+    if user_dict:
         await message.answer(text=USER_LEXICON_COMMANDS[message.text]["already_authorized"])
     else:
         await message.answer(text=USER_LEXICON_COMMANDS[message.text]["not_authorized"])
@@ -56,13 +46,17 @@ async def get_email(message: Message, state: FSMContext):
 
 @router.message(StateFilter(AuthorizeState.get_password))
 async def get_password(message: Message, state: FSMContext):
+    await state.set_state(default_state)
     data = await state.get_data()
     email = data["email"]
     password = message.text.strip()
-    await state.clear()
 
-    user = await user_service.login_user(message.from_user.id, email, password)
-    if user:
+    tokens = await user_service.login_user(email, password)
+    if tokens:
         await message.answer(text=USER_LEXICON["success_auth"])
+        await state.update_data(
+            access_token=tokens["access_token"],
+            refresh_token=tokens["refresh_token"]
+        )
     else:
         await message.answer(text=USER_LEXICON["invalid_auth"])
