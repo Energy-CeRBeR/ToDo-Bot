@@ -26,7 +26,13 @@ class UserService:
         if response.status_code == 200:
             return response.json()
 
-    async def login_user(self, email: str, password: str) -> Optional[Dict]:
+    async def login_user(self, user_id: int, email: str, password: str) -> Optional[Dict]:
         response = await self.client.post("/login", params={"email": email, "password": password})
         if response.status_code == 200:
-            return response.json()
+            resp_dict = response.json()
+            await UserRepository().refresh_tokens(user_id, resp_dict["access_token"], resp_dict["refresh_token"])
+
+            return await self.get_current_user(resp_dict["access_token"])
+
+    async def logout_user(self, user_id: int):
+        await UserRepository().refresh_tokens(user_id, "default", "default")
