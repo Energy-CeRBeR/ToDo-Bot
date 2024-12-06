@@ -11,7 +11,7 @@ class UserService:
         if response.status_code == 200:
             return response.json()
 
-    async def refresh_access(self, refresh_token: str):
+    async def refresh_access(self, refresh_token: str) -> Optional[Dict]:
         response = await self.client.post("/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
         if response.status_code == 200:
             return response.json()
