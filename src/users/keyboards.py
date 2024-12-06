@@ -14,3 +14,10 @@ def profile_keyboard() -> InlineKeyboardMarkup:
     )
 
     return InlineKeyboardMarkup(inline_keyboard=[[categories_button], [tasks_button]])
+
+
+def yes_no_keyboard(callback_data: str) -> InlineKeyboardMarkup:
+    yes_button = InlineKeyboardButton(text="Да", callback_data="yes_" + callback_data)
+    no_button = InlineKeyboardButton(text="Нет", callback_data="no_" + callback_data)
+
+    return InlineKeyboardMarkup(inline_keyboard=[[yes_button], [no_button]])
