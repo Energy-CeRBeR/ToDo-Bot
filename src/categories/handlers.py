@@ -1,11 +1,15 @@
-from aiogram import Router, F
-from aiogram.filters import CommandStart, StateFilter, Command
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state
-from aiogram.types import Message, CallbackQuery
+from aiogram import Router
+from aiogram.filters import Command
+from aiogram.types import Message
 
-from .lexicon import LEXICON_COMMANDS as USER_LEXICON_COMMANDS, LEXICON as USER_LEXICON
+from utils.middleware import AuthMiddleware
 from .services import CategoryService
 
 router = Router()
+router.message.middleware(AuthMiddleware())
 category_service = CategoryService()
+
+
+@router.message(Command(commands="categories"))
+async def get_categories(message: Message):
+    await message.answer("Categories")
