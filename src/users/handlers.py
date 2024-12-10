@@ -38,9 +38,7 @@ async def start_auth(message: Message, state: FSMContext):
 @router.message(StateFilter(AuthorizeState.get_email))
 async def get_email(message: Message, state: FSMContext):
     email = message.text.strip()
-    await state.update_data(
-        email=email
-    )
+    await state.update_data(email=email)
     await message.answer(text=USER_LEXICON["get_password"])
     await state.set_state(AuthorizeState.get_password)
 
