@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from httpx import AsyncClient
 
 
@@ -6,7 +6,7 @@ class CategoryService:
     def __init__(self):
         self.client = AsyncClient(base_url="https://energy-cerber.ru/categories")
 
-    async def get_categories(self, access_token: str) -> Optional[Dict]:
+    async def get_categories(self, access_token: str) -> Optional[List[Dict]]:
         response = await self.client.get("/", headers={"Authorization": f"Bearer {access_token}"})
         if response.status_code == 200:
             return response.json()

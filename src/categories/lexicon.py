@@ -1,5 +1,6 @@
-LEXICON_COMMANDS: dict = {
+LEXICON: dict[str, str] = {
 }
 
-LEXICON: dict[str, str] = {
+LEXICON_COMMANDS: dict = {
+    "/categories": "Ваш список категорий 📋"
 }
