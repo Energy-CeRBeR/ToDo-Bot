@@ -4,7 +4,7 @@ from httpx import AsyncClient
 
 class CategoryService:
     def __init__(self):
-        self.client = AsyncClient(base_url="https://energy-cerber.ru/categories")
+        self.client = AsyncClient(base_url="https://energy-cerber.ru/api/v1/categories")
 
     async def get_categories(self, access_token: str) -> Optional[List[Dict]]:
         response = await self.client.get("/", headers={"Authorization": f"Bearer {access_token}"})
