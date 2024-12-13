@@ -4,7 +4,7 @@ from httpx import AsyncClient
 
 class UserService:
     def __init__(self):
-        self.client = AsyncClient(base_url="https://energy-cerber.ru/api/v1/user")
+        self.client = AsyncClient(base_url="https://api.energy-cerber.ru/user")
 
     async def get_current_user(self, access_token: str) -> Optional[Dict]:
         response = await self.client.get("/self", headers={"Authorization": f"Bearer {access_token}"})
