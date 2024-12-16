@@ -32,6 +32,27 @@ def all_categories_keyboard(categories: List[Dict]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[*buttons, [back_page_button, exit_button, next_page_button]])
 
 
+def all_categories_keyboard_for_tasks(categories: List[Dict]) -> InlineKeyboardMarkup:
+    buttons = list()
+    for category in categories:
+        cur_category = InlineKeyboardButton(
+            text=category['name'],
+            callback_data=f"get_category_{category['id']}"
+        )
+        buttons.append([cur_category])
+
+    back_page_button = InlineKeyboardButton(
+        text=UNIVERSAL_LEXICON["back_page"],
+        callback_data="back_cat_page"
+    )
+    next_page_button = InlineKeyboardButton(
+        text=UNIVERSAL_LEXICON["next_page"],
+        callback_data="next_cat_page"
+    )
+
+    return InlineKeyboardMarkup(inline_keyboard=[*buttons, [back_page_button, next_page_button]])
+
+
 def show_category_keyboard(category_id: int) -> InlineKeyboardMarkup:
     edit_name_button = InlineKeyboardButton(
         text=CATEGORIES_LEXICON["edit_name"],

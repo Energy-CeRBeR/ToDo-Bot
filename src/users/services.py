@@ -17,7 +17,7 @@ class UserService:
             return response.json()
 
     async def login_user(self, email: str, password: str) -> Optional[Dict]:
-        response = await self.client.post("/login", params={"email": email, "password": password})
+        response = await self.client.post("/login", json={"email": email, "password": password})
         if response.status_code == 200:
             resp_dict = response.json()
             return resp_dict
