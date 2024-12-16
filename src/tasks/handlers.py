@@ -109,7 +109,19 @@ async def set_task_priority(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data[:13] == "calendar_get_", StateFilter(TaskState.get_date))
 async def set_task_date(callback: CallbackQuery, state: FSMContext):
-    await state.update_data(task_date=datetime.date.fromisoformat(callback.data[13:]))
+    await state.update_data(task_date=callback.data[13:])
+    user_data = await state.get_data()
+
+    request_body = {
+        "name": user_data["task_name"],
+        "description": user_data["task_description"],
+        "priority": user_data["task_priority"],
+        "category_id": user_data["task_category_id"],
+        "date": user_data["task_date"],
+
+    }
+
+    await task_service.create_task(request_body, user_data["access_token"])
     await callback.message.edit_text(
         text=TASKS_LEXICON["successful_create"],
         # reply_markup=tasks_calendar_keyboard(selected_date=state.get_data()["task_date"])
@@ -147,7 +159,7 @@ async def set_year(message: Message, state: FSMContext):
     )
 
 
-@user_router.callback_query(F.data[:22] == "calendar_select_month_")
+@router.callback_query(F.data[:22] == "calendar_select_month_")
 async def change_tasks_keyboard_month(callback: CallbackQuery, state: FSMContext):
     await state.update_data(year=int(callback.data[22:]), state=await state.get_state())
     await callback.message.edit_text(
@@ -157,7 +169,7 @@ async def change_tasks_keyboard_month(callback: CallbackQuery, state: FSMContext
     await state.set_state(TaskState.get_month)
 
 
-@user_router.callback_query(F.data[:10] == "get_month_", StateFilter(TaskState.get_month))
+@router.callback_query(F.data[:10] == "get_month_", StateFilter(TaskState.get_month))
 async def set_month(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     year = user_data["year"]
