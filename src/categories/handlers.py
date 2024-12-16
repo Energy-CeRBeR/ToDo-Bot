@@ -4,11 +4,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import default_state
 
-from utils.middleware import AuthMiddleware
 from .services import CategoryService
 from .lexicon import LEXICON as CATEGORIES_LEXICON, LEXICON_COMMANDS as CATEGORIES_LEXICON_COMMANDS
 from .keyboards import all_categories_keyboard, show_category_keyboard, choose_category_color
 from .states import CategoryState
+
+from utils.middleware import AuthMiddleware
 
 router = Router()
 router.message.middleware(AuthMiddleware())

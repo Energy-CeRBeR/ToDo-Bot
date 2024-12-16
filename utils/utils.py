@@ -1,4 +1,8 @@
+import calendar
+import datetime
+
 from enum import Enum
+from typing import Tuple
 
 
 class CategoryColors(Enum):
@@ -24,3 +28,38 @@ class CategoryColors(Enum):
     AMBER = "#FFC107"  # Янтарный
     DEEP_ORANGE = "#FF5722"  # Темно-оранжевый
     LIGHT_PINK = "#F48FB1"  # Светло-розовый
+
+
+priority_converter = {
+    "low": 3,
+    "medium": 2,
+    "high": 1
+}
+
+inverse_priority_converter = {
+    3: "low",
+    2: "medium",
+    1: "high"
+}
+
+
+def get_month_by_number(month: int) -> str:
+    return calendar.month_name[month]
+
+
+def get_day_by_number(day: int) -> str:
+    return calendar.day_name[day]
+
+
+def get_month_data(year: int, month: int) -> Tuple[int, int]:
+    return calendar.monthrange(year, month)
+
+
+if __name__ == "__main__":
+    date = datetime.date.today()
+    year, month, day = date.year, date.month, date.day
+    for day in range(7):
+        print(calendar.day_name[day])
+    print()
+    for month in range(1, 13):
+        print(calendar.monthrange(year, month))
