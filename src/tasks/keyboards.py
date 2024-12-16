@@ -8,7 +8,7 @@ from utils.universal_lexicon import LEXICON as UNIVERSAL_LEXICON
 from utils.utils import get_month_by_number, get_day_by_number, get_month_data
 
 
-def all_tasks_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
+def show_tasks_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
     buttons = list()
     for task in tasks:
         cur_task = InlineKeyboardButton(
@@ -149,7 +149,7 @@ def tasks_menu_keyboard() -> InlineKeyboardMarkup:
     )
     tasks_from_day_button = InlineKeyboardButton(
         text=TASKS_LEXICON["tasks_from_day"],
-        callback_data="show_tasks_from_day"
+        callback_data="get_tasks_from_day"
     )
     all_tasks_button = InlineKeyboardButton(
         text=TASKS_LEXICON["all_tasks"],

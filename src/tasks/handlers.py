@@ -8,7 +8,7 @@ from aiogram.fsm.state import default_state
 
 from .services import TaskService
 from .lexicon import LEXICON as TASKS_LEXICON, LEXICON_COMMANDS as TASKS_LEXICON_COMMANDS
-from .keyboards import all_tasks_keyboard, add_description_keyboard, select_priority_keyboard, \
+from .keyboards import show_tasks_keyboard, add_description_keyboard, select_priority_keyboard, \
     tasks_calendar_keyboard, select_month_keyboard, tasks_menu_keyboard
 from .states import TaskState
 
@@ -16,7 +16,7 @@ from src.categories.handlers import category_service
 from src.categories.keyboards import all_categories_keyboard_for_tasks
 
 from utils.middleware import AuthMiddleware
-from utils.utils import priority_converter, inverse_priority_converter
+from utils.utils import priority_converter
 
 from src.users.handlers import router as user_router
 
@@ -27,11 +27,20 @@ task_service = TaskService()
 
 
 @user_router.message(Command(commands="test_calendar"))
-async def set_task_date(message: Message):
+async def test_calendar(message: Message):
     await message.answer(
         text=TASKS_LEXICON["get_date"],
         reply_markup=tasks_calendar_keyboard()
     )
+
+
+@router.callback_query(F.data == "tasks_menu", StateFilter(default_state))
+async def show_tasks_menu(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["tasks_menu"],
+        reply_markup=tasks_menu_keyboard()
+    )
+    await state.set_state(TaskState.show_task)
 
 
 @router.message(Command(commands=["all_tasks", "active_tasks", "completed_tasks"]), StateFilter(default_state))
@@ -47,11 +56,11 @@ async def get_tasks(message: Message, state: FSMContext):
 
     await message.answer(
         text=TASKS_LEXICON_COMMANDS[message.text],
-        reply_markup=all_tasks_keyboard(tasks)
+        reply_markup=show_tasks_keyboard(tasks)
     )
 
 
-@router.callback_query(F.data[:11] == "show_tasks_", StateFilter(default_state))
+@router.callback_query(F.data[:11] == "show_tasks_", StateFilter(TaskState.show_task))
 async def get_tasks(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
 
@@ -64,16 +73,30 @@ async def get_tasks(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.edit_text(
         text=TASKS_LEXICON_COMMANDS[f"/{callback.data[11:]}_tasks"],
-        reply_markup=all_tasks_keyboard(tasks)
+        reply_markup=show_tasks_keyboard(tasks)
     )
 
 
-@router.callback_query(F.data == "tasks_menu", StateFilter(default_state))
-async def show_tasks_menu(callback: CallbackQuery):
+@router.callback_query(F.data == "get_tasks_from_day", StateFilter(TaskState.show_task))
+async def select_day_for_show_task(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
-        text=TASKS_LEXICON["tasks_menu"],
-        reply_markup=tasks_menu_keyboard()
+        text=TASKS_LEXICON["get_date"],
+        reply_markup=tasks_calendar_keyboard()
     )
+    await state.set_state(TaskState.show_task)
+
+
+@router.callback_query(F.data[:13] == "calendar_get_", StateFilter(TaskState.show_task))
+async def show_task_from_day(callback: CallbackQuery, state: FSMContext):
+    date = callback.data[13:]
+    user_data = await state.get_data()
+    tasks = [task for task in await task_service.get_all_tasks(user_data["access_token"]) if task["date"] == date]
+
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["show_tasks_from_day"].format(date=date),
+        reply_markup=show_tasks_keyboard(tasks)
+    )
+    await state.set_state(default_state)
 
 
 @router.message(Command(commands="create_task"), StateFilter(default_state))
@@ -165,7 +188,6 @@ async def set_task_date(callback: CallbackQuery, state: FSMContext):
 async def change_tasks_keyboard_page(callback: CallbackQuery):
     year = int(callback.data[14:18])
     month = int(callback.data[19:])
-    print(month)
     await callback.message.edit_text(
         text=TASKS_LEXICON["get_date"],
         reply_markup=tasks_calendar_keyboard(datetime.date(year, month, 1))
