@@ -105,6 +105,7 @@ async def set_new_name(message: Message, state: FSMContext):
     )
 
 
-@router.callback_query(F.data == "exit", StateFilter(default_state))
-async def close_keyboard(callback: CallbackQuery):
+@router.callback_query(F.data == "exit")
+async def close_keyboard(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(default_state)
     await callback.message.delete()

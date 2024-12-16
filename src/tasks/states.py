@@ -9,3 +9,4 @@ class TaskState(StatesGroup):
     get_date = State()
     get_year = State()
     get_month = State()
+    show_task = State()

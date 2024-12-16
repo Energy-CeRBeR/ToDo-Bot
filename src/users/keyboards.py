@@ -10,7 +10,7 @@ def profile_keyboard() -> InlineKeyboardMarkup:
     )
     tasks_button = InlineKeyboardButton(
         text=USER_LEXICON["tasks_button_text"],
-        callback_data="show_tasks"
+        callback_data="tasks_menu"
     )
 
     return InlineKeyboardMarkup(inline_keyboard=[[categories_button], [tasks_button]])

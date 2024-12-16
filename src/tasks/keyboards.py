@@ -8,7 +8,7 @@ from utils.universal_lexicon import LEXICON as UNIVERSAL_LEXICON
 from utils.utils import get_month_by_number, get_day_by_number, get_month_data
 
 
-def all_tasks_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
+def show_tasks_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
     buttons = list()
     for task in tasks:
         cur_task = InlineKeyboardButton(
@@ -138,3 +138,43 @@ def select_month_keyboard() -> InlineKeyboardMarkup:
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=[buttons[:3], buttons[3:6], buttons[6:9], buttons[9:12]])
+
+
+def tasks_menu_keyboard() -> InlineKeyboardMarkup:
+    cur_day = datetime.date.today()
+
+    tasks_today_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["tasks_today"],
+        callback_data=f"calendar_get_{cur_day.year}-{cur_day.month}-{cur_day.day}"
+    )
+    tasks_from_day_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["tasks_from_day"],
+        callback_data="get_tasks_from_day"
+    )
+    all_tasks_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["all_tasks"],
+        callback_data="show_tasks_all"
+    )
+    active_tasks_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["active_tasks"],
+        callback_data="show_tasks_active"
+    )
+    completed_tasks_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["completed_tasks"],
+        callback_data="show_tasks_completed"
+    )
+    exit_button = InlineKeyboardButton(
+        text=UNIVERSAL_LEXICON["exit"],
+        callback_data="exit"
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [tasks_today_button],
+            [tasks_from_day_button],
+            [all_tasks_button],
+            [active_tasks_button],
+            [completed_tasks_button],
+            [exit_button]
+        ]
+    )
