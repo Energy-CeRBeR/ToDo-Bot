@@ -9,7 +9,7 @@ from aiogram.fsm.state import default_state
 from .services import TaskService
 from .lexicon import LEXICON as TASKS_LEXICON, LEXICON_COMMANDS as TASKS_LEXICON_COMMANDS
 from .keyboards import all_tasks_keyboard, add_description_keyboard, select_priority_keyboard, \
-    tasks_calendar_keyboard, select_month_keyboard
+    tasks_calendar_keyboard, select_month_keyboard, tasks_menu_keyboard
 from .states import TaskState
 
 from src.categories.handlers import category_service
@@ -34,13 +34,45 @@ async def set_task_date(message: Message):
     )
 
 
-@router.message(Command(commands="all_tasks"), StateFilter(default_state))
-async def get_categories(message: Message, state: FSMContext):
+@router.message(Command(commands=["all_tasks", "active_tasks", "completed_tasks"]), StateFilter(default_state))
+async def get_tasks(message: Message, state: FSMContext):
     user_data = await state.get_data()
+
     tasks = await task_service.get_all_tasks(user_data["access_token"])
+    if message.text == "/active_tasks":
+        tasks = [task for task in tasks if not task["completed"]]
+    elif message.text == "/completed_tasks":
+        tasks = [task for task in tasks if task["completed"]]
+    tasks.sort(key=lambda x: x["date"], reverse=True)
+
     await message.answer(
         text=TASKS_LEXICON_COMMANDS[message.text],
         reply_markup=all_tasks_keyboard(tasks)
+    )
+
+
+@router.callback_query(F.data[:11] == "show_tasks_", StateFilter(default_state))
+async def get_tasks(callback: CallbackQuery, state: FSMContext):
+    user_data = await state.get_data()
+
+    tasks = await task_service.get_all_tasks(user_data["access_token"])
+    if callback.data == "show_tasks_active":
+        tasks = [task for task in tasks if not task["completed"]]
+    elif callback.data == "show_tasks_completed":
+        tasks = [task for task in tasks if task["completed"]]
+    tasks.sort(key=lambda x: x["date"], reverse=True)
+
+    await callback.message.edit_text(
+        text=TASKS_LEXICON_COMMANDS[f"/{callback.data[11:]}_tasks"],
+        reply_markup=all_tasks_keyboard(tasks)
+    )
+
+
+@router.callback_query(F.data == "tasks_menu", StateFilter(default_state))
+async def show_tasks_menu(callback: CallbackQuery):
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["tasks_menu"],
+        reply_markup=tasks_menu_keyboard()
     )
 
 

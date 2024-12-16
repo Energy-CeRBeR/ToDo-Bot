@@ -11,7 +11,13 @@ LEXICON: dict[str, str] = {
     "medium_priority": "Средний",
     "high_priority": "Высокий",
     "prev_calendar_page": "<<<<",
-    "next_calendar_page": ">>>>"
+    "next_calendar_page": ">>>>",
+    "tasks_menu": "Выберите действие: ",
+    "tasks_today": "Задачи на сегодня",
+    "tasks_from_day": "Выбрать день для просмотра",
+    "all_tasks": "Просмотр всех задач",
+    "active_tasks": "Просмотр активных задач",
+    "completed_tasks": "Просмотр выполненных задач"
 }
 
 LEXICON_COMMANDS: dict = {
