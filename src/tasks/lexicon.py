@@ -1,4 +1,18 @@
-LEXICON: dict[str, str] = {
+task_about_text = """
+Название: *{name}*
+
+Описание: _{description}_
+
+Приоритет: *{priority}*
+
+Категория: *{category}*
+
+Состояние: *{status}*
+
+Дата: *{date}*
+"""
+
+LEXICON: dict = {
     "get_name": "Введите название задачи: ",
     "get_description": "Введите описание задачи: ",
     "get_priority": "Выберите приоритет задачи: ",
@@ -18,7 +32,14 @@ LEXICON: dict[str, str] = {
     "all_tasks": "Просмотр всех задач",
     "active_tasks": "Просмотр активных задач",
     "completed_tasks": "Просмотр выполненных задач",
-    "show_tasks_from_day": "Список задач на {date}"
+    "show_tasks_from_day": "Список задач на {date}",
+    "show_task_about": task_about_text,
+    "no_description": "Без описания",
+    "edit_task": "Изменить задачу ✏️",
+    "edit_status": ["Пометить выполненной ✅️", "Отменить выполнение ❌"],
+    "delete_task": "Удалить задачу ❌",
+    "check_status": ["Не выполнена ❌", "Выполнена ✅️"],
+    "task_status_changed": "Статус задачи успешно изменён! ✅️"
 }
 
 LEXICON_COMMANDS: dict = {

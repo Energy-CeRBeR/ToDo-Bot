@@ -9,14 +9,14 @@ from aiogram.fsm.state import default_state
 from .services import TaskService
 from .lexicon import LEXICON as TASKS_LEXICON, LEXICON_COMMANDS as TASKS_LEXICON_COMMANDS
 from .keyboards import show_tasks_keyboard, add_description_keyboard, select_priority_keyboard, \
-    tasks_calendar_keyboard, select_month_keyboard, tasks_menu_keyboard
+    tasks_calendar_keyboard, select_month_keyboard, tasks_menu_keyboard, task_about_keyboard
 from .states import TaskState
 
 from src.categories.handlers import category_service
 from src.categories.keyboards import all_categories_keyboard_for_tasks
 
 from utils.middleware import AuthMiddleware
-from utils.utils import priority_converter
+from utils.utils import priority_converter, inverse_priority_converter
 
 from src.users.handlers import router as user_router
 
@@ -36,7 +36,7 @@ async def test_calendar(message: Message):
 
 @router.callback_query(F.data == "tasks_menu", StateFilter(default_state))
 async def show_tasks_menu(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text(
+    await callback.message.answer(
         text=TASKS_LEXICON["tasks_menu"],
         reply_markup=tasks_menu_keyboard()
     )
@@ -60,6 +60,29 @@ async def get_tasks(message: Message, state: FSMContext):
     )
 
 
+@router.callback_query(F.data[:9] == "get_task_")
+async def get_task_about(callback: CallbackQuery, state: FSMContext):
+    task_id = int(callback.data[9:])
+    user_data = await state.get_data()
+
+    task = await task_service.get_task_by_id(task_id, user_data["access_token"])
+    task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
+
+    name = task["name"]
+    description = task["description"] if task["description"] else TASKS_LEXICON["no_description"]
+    priority = inverse_priority_converter[task["priority"]]
+    category = task_category["name"]
+    status = TASKS_LEXICON["check_status"][int(task["completed"])]
+    date = task["date"]
+
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["show_task_about"].format(
+            name=name, description=description, priority=priority, category=category, status=status, date=date
+        ), parse_mode="Markdown",
+        reply_markup=task_about_keyboard(task["id"], task["completed"])
+    )
+
+
 @router.callback_query(F.data[:11] == "show_tasks_", StateFilter(TaskState.show_task))
 async def get_tasks(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
@@ -74,6 +97,30 @@ async def get_tasks(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         text=TASKS_LEXICON_COMMANDS[f"/{callback.data[11:]}_tasks"],
         reply_markup=show_tasks_keyboard(tasks)
+    )
+
+
+@router.callback_query(F.data[:17] == "edit_task_status_")
+async def edit_task_status(callback: CallbackQuery, state: FSMContext):
+    task_id = int(callback.data[17:])
+    user_data = await state.get_data()
+
+    task = await task_service.change_task_status(task_id, user_data["access_token"])
+    task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
+
+    name = task["name"]
+    description = task["description"] if task["description"] else TASKS_LEXICON["no_description"]
+    priority = inverse_priority_converter[task["priority"]]
+    category = task_category["name"]
+    status = TASKS_LEXICON["check_status"][int(task["completed"])]
+    date = task["date"]
+
+    await callback.message.edit_text(text=TASKS_LEXICON["task_status_changed"])
+    await callback.message.answer(
+        text=TASKS_LEXICON["show_task_about"].format(
+            name=name, description=description, priority=priority, category=category, status=status, date=date
+        ), parse_mode="Markdown",
+        reply_markup=task_about_keyboard(task["id"], task["completed"])
     )
 
 

@@ -31,7 +31,7 @@ async def get_categories(message: Message, state: FSMContext):
 async def get_categories(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     categories = await category_service.get_categories(user_data["access_token"])
-    await callback.message.edit_text(
+    await callback.message.answer(
         text=CATEGORIES_LEXICON_COMMANDS["/categories"],
         reply_markup=all_categories_keyboard(categories)
     )

@@ -12,7 +12,7 @@ def show_tasks_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
     buttons = list()
     for task in tasks:
         cur_task = InlineKeyboardButton(
-            text=task['name'],
+            text=f"{task['name']} ({task['date']})",
             callback_data=f"get_task_{task['id']}"
         )
         buttons.append([cur_task])
@@ -31,6 +31,29 @@ def show_tasks_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
     )
 
     return InlineKeyboardMarkup(inline_keyboard=[*buttons, [back_page_button, exit_button, next_page_button]])
+
+
+def task_about_keyboard(task_id: int, task_status: bool) -> InlineKeyboardMarkup:
+    edit_task_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["edit_task"],
+        callback_data=f"edit_task_{task_id}"
+    )
+    edit_status_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["edit_status"][int(task_status)],
+        callback_data=f"edit_task_status_{task_id}"
+    )
+    delete_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["delete_task"],
+        callback_data=f"delete_task_{task_id}"
+    )
+    exit_button = InlineKeyboardButton(
+        text=UNIVERSAL_LEXICON["exit"],
+        callback_data="exit"
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[edit_task_button], [edit_status_button], [delete_button], [exit_button]]
+    )
 
 
 def add_description_keyboard() -> InlineKeyboardMarkup:
