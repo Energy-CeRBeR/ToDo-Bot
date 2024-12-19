@@ -35,12 +35,11 @@ async def test_calendar(message: Message):
 
 
 @router.callback_query(F.data == "tasks_menu")
-async def show_tasks_menu(callback: CallbackQuery, state: FSMContext):
+async def show_tasks_menu(callback: CallbackQuery):
     await callback.message.answer(
         text=TASKS_LEXICON["tasks_menu"],
         reply_markup=tasks_menu_keyboard()
     )
-    await state.set_state(TaskState.show_task)
 
 
 @router.message(Command(commands=["all_tasks", "active_tasks", "completed_tasks"]), StateFilter(default_state))
@@ -84,7 +83,7 @@ async def get_task_about(callback: CallbackQuery, state: FSMContext):
     )
 
 
-@router.callback_query(F.data[:11] == "show_tasks_", StateFilter(TaskState.show_task))
+@router.callback_query(F.data[:11] == "show_tasks_")
 async def get_tasks(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
 
@@ -95,6 +94,7 @@ async def get_tasks(callback: CallbackQuery, state: FSMContext):
         tasks = [task for task in tasks if task["completed"]]
     tasks.sort(key=lambda x: x["date"], reverse=True)
 
+    await state.set_state(TaskState.show_task)
     await callback.message.edit_text(
         text=TASKS_LEXICON_COMMANDS[f"/{callback.data[11:]}_tasks"],
         reply_markup=show_tasks_keyboard(tasks)
@@ -170,8 +170,9 @@ async def delete_task(callback: CallbackQuery, state: FSMContext):
     await state.set_state(default_state)
 
 
-@router.callback_query(F.data == "get_tasks_from_day", StateFilter(TaskState.show_task))
+@router.callback_query(F.data == "get_tasks_from_day")
 async def select_day_for_show_task(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(TaskState.show_task)
     await callback.message.edit_text(
         text=TASKS_LEXICON["get_date"],
         reply_markup=tasks_calendar_keyboard()
