@@ -36,7 +36,7 @@ def show_tasks_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
 def task_about_keyboard(task_id: int, task_status: bool) -> InlineKeyboardMarkup:
     edit_task_button = InlineKeyboardButton(
         text=TASKS_LEXICON["edit_task"],
-        callback_data=f"edit_task_{task_id}"
+        callback_data=f"edit_task_menu_{task_id}"
     )
     edit_status_button = InlineKeyboardButton(
         text=TASKS_LEXICON["edit_status"][int(task_status)],
@@ -198,6 +198,49 @@ def tasks_menu_keyboard() -> InlineKeyboardMarkup:
             [all_tasks_button],
             [active_tasks_button],
             [completed_tasks_button],
+            [exit_button]
+        ]
+    )
+
+
+def task_edit_keyboard(task_id: int) -> InlineKeyboardMarkup:
+    edit_name_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["edit_name"],
+        callback_data="edit_task_name"
+    )
+    edit_description_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["edit_description"],
+        callback_data="edit_task_description"
+    )
+    edit_priority_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["edit_priority"],
+        callback_data="edit_task_priority"
+    )
+    edit_category_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["edit_category"],
+        callback_data="edit_task_category"
+    )
+    edit_date_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["edit_date"],
+        callback_data="edit_task_date"
+    )
+    back_to_task_button = InlineKeyboardButton(
+        text=TASKS_LEXICON["back_to_task"],
+        callback_data=f"get_task_{task_id}"
+    )
+    exit_button = InlineKeyboardButton(
+        text=UNIVERSAL_LEXICON["exit"],
+        callback_data="exit"
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [edit_name_button],
+            [edit_description_button],
+            [edit_priority_button],
+            [edit_category_button],
+            [edit_date_button],
+            [back_to_task_button],
             [exit_button]
         ]
     )

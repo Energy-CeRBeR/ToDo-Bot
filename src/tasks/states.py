@@ -11,3 +11,5 @@ class TaskState(StatesGroup):
     get_month = State()
     show_task = State()
     delete_task = State()
+    edit_name = State()
+    edit_description = State()
