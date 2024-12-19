@@ -201,3 +201,16 @@ def tasks_menu_keyboard() -> InlineKeyboardMarkup:
             [exit_button]
         ]
     )
+
+
+def yes_no_keyboard() -> InlineKeyboardMarkup:
+    yes_button = InlineKeyboardButton(
+        text=UNIVERSAL_LEXICON["yes_button"],
+        callback_data="yes"
+    )
+    no_button = InlineKeyboardButton(
+        text=UNIVERSAL_LEXICON["no_button"],
+        callback_data="no"
+    )
+
+    return InlineKeyboardMarkup(inline_keyboard=[[yes_button], [no_button]])

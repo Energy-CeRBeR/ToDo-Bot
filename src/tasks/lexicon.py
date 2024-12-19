@@ -39,7 +39,10 @@ LEXICON: dict = {
     "edit_status": ["Пометить выполненной ✅️", "Отменить выполнение ❌"],
     "delete_task": "Удалить задачу ❌",
     "check_status": ["Не выполнена ❌", "Выполнена ✅️"],
-    "task_status_changed": "Статус задачи успешно изменён! ✅️"
+    "task_status_changed": "Статус задачи успешно изменён! ✅️",
+    "delete_task_confirmation": "❓ Вы действительно хотите удалить данную задачу ❓",
+    "cancel_delete": "Операция удаления отменена!",
+    "task_deleted": "Задача успешно удалена! ✅️",
 }
 
 LEXICON_COMMANDS: dict = {
