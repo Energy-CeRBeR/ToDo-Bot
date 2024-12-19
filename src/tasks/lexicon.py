@@ -1,3 +1,7 @@
+from typing import Dict
+
+from utils.utils import inverse_priority_converter
+
 task_about_text = """
 Название: *{name}*
 
@@ -11,6 +15,20 @@ task_about_text = """
 
 Дата: *{date}*
 """
+
+
+def create_task_about_text(task: Dict, task_category: Dict):
+    name = task["name"]
+    description = task["description"] if task["description"] else LEXICON["no_description"]
+    priority = inverse_priority_converter[task["priority"]]
+    category = task_category["name"]
+    status = LEXICON["check_status"][int(task["completed"])]
+    date = task["date"]
+
+    return task_about_text.format(
+        name=name, description=description, priority=priority, category=category, status=status, date=date
+    )
+
 
 LEXICON: dict = {
     "get_name": "Введите название задачи: ",
@@ -43,6 +61,15 @@ LEXICON: dict = {
     "delete_task_confirmation": "❓ Вы действительно хотите удалить данную задачу ❓",
     "cancel_delete": "Операция удаления отменена!",
     "task_deleted": "Задача успешно удалена! ✅️",
+    "edit_name": "Изменить название задачи",
+    "edit_description": "Изменить описание задачи",
+    "edit_priority": "Изменить приоритет задачи",
+    "edit_category": "Изменить категорию задачи",
+    "edit_date": "Изменить дату задачи",
+    "back_to_task": "⏪ Вернуться к просмотру задачи",
+    "edit_task_menu": "Что вы хотите изменить?",
+    "name_edited": "Название задачи успешно обновлено! ✅️",
+    "description_edited": "Описание задачи успешно обновлено! ✅"
 }
 
 LEXICON_COMMANDS: dict = {

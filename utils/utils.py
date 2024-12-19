@@ -2,7 +2,7 @@ import calendar
 import datetime
 
 from enum import Enum
-from typing import Tuple
+from typing import Tuple, Any, Optional, Dict
 
 
 class CategoryColors(Enum):
@@ -41,6 +41,19 @@ inverse_priority_converter = {
     2: "medium",
     1: "high"
 }
+
+
+def set_edited_task_data(task: Dict, edited_param: str, edited_data: Any) -> Dict:
+    data = {
+        "name": task["name"],
+        "description": task["description"],
+        "priority": task["priority"],
+        "category_id": task["category_id"],
+        "date": task["date"]
+    }
+    data[edited_param] = edited_data
+
+    return data
 
 
 def get_month_by_number(month: int) -> str:
