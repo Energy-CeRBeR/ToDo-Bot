@@ -27,7 +27,7 @@ class TaskService:
             return response.json()
 
     async def change_task_status(self, task_id: int, access_token: str) -> Optional[Dict]:
-        response = await self.client.patch(
+        response = await self.client.put(
             f"/{task_id}/change_status", headers={"Authorization": f"Bearer {access_token}"}
         )
         if response.status_code == 200:
