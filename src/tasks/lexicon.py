@@ -37,6 +37,7 @@ LEXICON: dict = {
     "get_date": "Выберите дату задачи: ",
     "get_year": "Введите год: ",
     "get_month": "Введите месяц: ",
+    "get_category": "Выберите категорию для задачи:",
     "successful_create": "Задача успешно создана! ✅️",
     "no_add_description": "Не добавлять описание ❌",
     "low_priority": "Низкий",
@@ -69,7 +70,10 @@ LEXICON: dict = {
     "back_to_task": "⏪ Вернуться к просмотру задачи",
     "edit_task_menu": "Что вы хотите изменить?",
     "name_edited": "Название задачи успешно обновлено! ✅️",
-    "description_edited": "Описание задачи успешно обновлено! ✅"
+    "description_edited": "Описание задачи успешно обновлено! ✅",
+    "priority_edited": "Приоритет задачи успешно обновлён! ✅",
+    "category_edited": "Категория задачи успешно обновлена! ✅",
+    "date_edited": "Дата задачи успешно обновлена! ✅"
 }
 
 LEXICON_COMMANDS: dict = {
