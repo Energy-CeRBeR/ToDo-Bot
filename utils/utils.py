@@ -43,6 +43,23 @@ inverse_priority_converter = {
 }
 
 
+def format_date(date_string: str) -> str:
+    """
+    Преобразует дату из формата 'гггг-м-д' в формат 'гггг-мм-дд'.
+
+    Args:
+        date_string: Строка с датой в формате 'гггг-м-д'.
+
+    Returns:
+        Строка с датой в формате 'гггг-мм-дд' или None, если формат ввода неверный.
+    """
+
+    date_object = datetime.datetime.strptime(date_string, '%Y-%m-%d')
+    formatted_date = date_object.strftime('%Y-%m-%d')
+
+    return formatted_date
+
+
 def set_edited_task_data(task: Dict, edited_param: str, edited_data: Any) -> Dict:
     data = {
         "name": task["name"],
