@@ -273,7 +273,7 @@ async def start_delete_task(callback: CallbackQuery, state: FSMContext):
     await state.update_data(task_id=task_id)
     await state.set_state(TaskState.delete_task)
     await callback.message.edit_text(
-        text=TASKS_LEXICON["delete_task_confirmation"].format(task_id=task_id),
+        text=TASKS_LEXICON["delete_task_confirmation"],
         reply_markup=yes_no_keyboard()
     )
 
@@ -283,7 +283,7 @@ async def cancel_delete_task(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.show_task)
     user_data = await state.get_data()
 
-    task = await task_service.change_task_status(user_data["task_id"], user_data["access_token"])
+    task = await task_service.get_task_by_id(user_data["task_id"], user_data["access_token"])
     task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
 
     await callback.message.edit_text(text=TASKS_LEXICON["cancel_delete"])

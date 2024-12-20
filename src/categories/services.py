@@ -16,8 +16,8 @@ class CategoryService:
         if response.status_code == 200:
             return response.json()
 
-    async def create_category(self, name: str, color: str, access_token: str) -> Optional[Dict]:
-        response = await self.client.post("/", json={"name": name, "color": color},
+    async def create_category(self, name: str, access_token: str) -> Optional[Dict]:
+        response = await self.client.post("/", json={"name": name, "color": "#FFFFFF"},
                                           headers={"Authorization": f"Bearer {access_token}"})
         if response.status_code == 200:
             return response.json()
