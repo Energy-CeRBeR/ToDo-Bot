@@ -88,7 +88,7 @@ async def edit_description(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "no_add_description", StateFilter(TaskState.edit_description))
-async def no_add_description(callback: CallbackQuery, state: FSMContext):
+async def no_edit_description(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
 
     task = await task_service.get_task_by_id(user_data["task_id"], user_data["access_token"])
@@ -102,7 +102,7 @@ async def no_add_description(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(StateFilter(TaskState.edit_description))
-async def set_task_description(message: Message, state: FSMContext):
+async def set_new_task_description(message: Message, state: FSMContext):
     user_data = await state.get_data()
     task_id = user_data["task_id"]
     task = await task_service.get_task_by_id(task_id, user_data["access_token"])
@@ -114,6 +114,33 @@ async def set_task_description(message: Message, state: FSMContext):
     await state.set_state(TaskState.show_task)
     await message.answer(text=TASKS_LEXICON["description_edited"])
     await message.answer(
+        text=create_task_about_text(task, task_category), parse_mode="Markdown",
+        reply_markup=task_about_keyboard(task["id"], task["completed"])
+    )
+
+
+@router.callback_query(F.data == "edit_task_priority", StateFilter(TaskState.show_task))
+async def edit_priority(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(TaskState.edit_priority)
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["get_priority"],
+        reply_markup=select_priority_keyboard()
+    )
+
+
+@router.callback_query(F.data[-8:] == "priority", StateFilter(TaskState.edit_priority))
+async def set_new_task_priority(callback: CallbackQuery, state: FSMContext):
+    user_data = await state.get_data()
+    task_id = user_data["task_id"]
+    task = await task_service.get_task_by_id(task_id, user_data["access_token"])
+
+    data = set_edited_task_data(task, "priority", priority_converter[callback.data[:-9]])
+    task = await task_service.edit_task(task_id, data, user_data["access_token"])
+    task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
+
+    await state.set_state(TaskState.show_task)
+    await callback.message.edit_text(text=TASKS_LEXICON["priority_edited"])
+    await callback.message.answer(
         text=create_task_about_text(task, task_category), parse_mode="Markdown",
         reply_markup=task_about_keyboard(task["id"], task["completed"])
     )

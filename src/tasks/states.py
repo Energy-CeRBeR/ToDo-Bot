@@ -13,3 +13,4 @@ class TaskState(StatesGroup):
     delete_task = State()
     edit_name = State()
     edit_description = State()
+    edit_priority = State()

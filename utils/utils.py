@@ -37,9 +37,9 @@ priority_converter = {
 }
 
 inverse_priority_converter = {
-    3: "low",
-    2: "medium",
-    1: "high"
+    3: "Низкий",
+    2: "Средний",
+    1: "Высокий"
 }
 
 

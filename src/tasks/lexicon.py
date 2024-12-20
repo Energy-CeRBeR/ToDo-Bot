@@ -69,7 +69,8 @@ LEXICON: dict = {
     "back_to_task": "⏪ Вернуться к просмотру задачи",
     "edit_task_menu": "Что вы хотите изменить?",
     "name_edited": "Название задачи успешно обновлено! ✅️",
-    "description_edited": "Описание задачи успешно обновлено! ✅"
+    "description_edited": "Описание задачи успешно обновлено! ✅",
+    "priority_edited": "Приоритет задачи успешно обновлён! ✅"
 }
 
 LEXICON_COMMANDS: dict = {
