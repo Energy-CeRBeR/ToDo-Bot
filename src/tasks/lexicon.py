@@ -73,7 +73,8 @@ LEXICON: dict = {
     "description_edited": "Описание задачи успешно обновлено! ✅",
     "priority_edited": "Приоритет задачи успешно обновлён! ✅",
     "category_edited": "Категория задачи успешно обновлена! ✅",
-    "date_edited": "Дата задачи успешно обновлена! ✅"
+    "date_edited": "Дата задачи успешно обновлена! ✅",
+    "tasks_from_category": "Список задач из категории *{name}*:"
 }
 
 LEXICON_COMMANDS: dict = {

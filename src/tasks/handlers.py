@@ -146,8 +146,22 @@ async def set_new_task_priority(callback: CallbackQuery, state: FSMContext):
     )
 
 
+@router.callback_query(F.data[:20] == "show_category_tasks_", StateFilter(default_state))
+async def get_tasks_from_category(callback: CallbackQuery, state: FSMContext):
+    category_id = int(callback.data[20:])
+    user_data = await state.get_data()
+    await state.set_state(TaskState.show_task)
+
+    category = await category_service.get_category(category_id, user_data["access_token"])
+    tasks = category["tasks"]
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["tasks_from_category"].format(name=category["name"]), parse_mode="Markdown",
+        reply_markup=show_tasks_keyboard(tasks)
+    )
+
+
 @router.callback_query(F.data == "edit_task_category", StateFilter(TaskState.show_task))
-async def edit_category(callback: CallbackQuery, state: FSMContext):
+async def edit_task_category(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_category)
     user_data = await state.get_data()
     categories = await category_service.get_categories(user_data["access_token"])
