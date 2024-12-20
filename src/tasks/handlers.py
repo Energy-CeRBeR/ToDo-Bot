@@ -27,14 +27,6 @@ router.callback_query.middleware(AuthMiddleware())
 task_service = TaskService()
 
 
-@user_router.message(Command(commands="test_calendar"))
-async def test_calendar(message: Message):
-    await message.answer(
-        text=TASKS_LEXICON["get_date"],
-        reply_markup=tasks_calendar_keyboard()
-    )
-
-
 @router.callback_query(F.data == "tasks_menu")
 async def show_tasks_menu(callback: CallbackQuery):
     await callback.message.answer(
@@ -226,7 +218,7 @@ async def get_tasks(message: Message, state: FSMContext):
         tasks = [task for task in tasks if not task["completed"]]
     elif message.text == "/completed_tasks":
         tasks = [task for task in tasks if task["completed"]]
-    tasks.sort(key=lambda x: x["date"], reverse=True)
+    tasks.sort(key=lambda x: datetime.datetime.strptime(x["date"], '%Y-%m-%d'), reverse=True)
 
     await state.set_state(TaskState.show_task)
     await message.answer(
@@ -258,7 +250,7 @@ async def get_tasks(callback: CallbackQuery, state: FSMContext):
         tasks = [task for task in tasks if not task["completed"]]
     elif callback.data == "show_tasks_completed":
         tasks = [task for task in tasks if task["completed"]]
-    tasks.sort(key=lambda x: x["date"], reverse=True)
+    tasks.sort(key=lambda x: datetime.datetime.strptime(x["date"], '%Y-%m-%d'), reverse=True)
 
     await state.set_state(TaskState.show_task)
     await callback.message.edit_text(
@@ -473,4 +465,14 @@ async def set_month(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         text=TASKS_LEXICON["get_date"],
         reply_markup=tasks_calendar_keyboard(datetime.date(year, month, 1))
+    )
+
+
+@router.callback_query(StateFilter(TaskState))
+async def states_error(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(cur_state=await state.get_state())
+    await state.set_state(TaskState.kill_state)
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["error_state"], parse_mode="Markdown",
+        reply_markup=yes_no_keyboard()
     )

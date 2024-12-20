@@ -16,3 +16,4 @@ class TaskState(StatesGroup):
     edit_priority = State()
     edit_category = State()
     edit_date = State()
+    kill_state = State()

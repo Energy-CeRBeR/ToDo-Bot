@@ -66,7 +66,7 @@ def category_about_keyboard(category_id: int) -> InlineKeyboardMarkup:
     )
     back_to_categories_button = InlineKeyboardButton(
         text=CATEGORIES_LEXICON["back_to_categories"],
-        callback_data="show_categories"
+        callback_data="back_to_categories"
     )
     exit_button = InlineKeyboardButton(
         text=UNIVERSAL_LEXICON["exit"],

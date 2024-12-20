@@ -120,3 +120,9 @@ async def confirm_logout(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "no_logout")
 async def cancel_logout(callback: CallbackQuery):
     await callback.message.delete()
+
+
+@router.callback_query(F.data == "exit")
+async def close_keyboard(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(default_state)
+    await callback.message.delete()

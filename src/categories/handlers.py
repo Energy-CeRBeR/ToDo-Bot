@@ -20,7 +20,7 @@ category_service = CategoryService()
 @router.message(Command(commands="categories"), StateFilter(default_state))
 async def get_categories(message: Message, state: FSMContext):
     user_data = await state.get_data()
-    categories = await category_service.get_categories(user_data["access_token"])
+    categories = await category_service.get_categories_without_base(user_data["access_token"])
     await message.answer(
         text=CATEGORIES_LEXICON_COMMANDS[message.text],
         reply_markup=all_categories_keyboard(categories)
@@ -30,8 +30,18 @@ async def get_categories(message: Message, state: FSMContext):
 @router.callback_query(F.data == "show_categories", StateFilter(default_state))
 async def get_categories(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
-    categories = await category_service.get_categories(user_data["access_token"])
+    categories = await category_service.get_categories_without_base(user_data["access_token"])
     await callback.message.answer(
+        text=CATEGORIES_LEXICON_COMMANDS["/categories"],
+        reply_markup=all_categories_keyboard(categories)
+    )
+
+
+@router.callback_query(F.data == "back_to_categories", StateFilter(default_state))
+async def get_categories(callback: CallbackQuery, state: FSMContext):
+    user_data = await state.get_data()
+    categories = await category_service.get_categories_without_base(user_data["access_token"])
+    await callback.message.edit_text(
         text=CATEGORIES_LEXICON_COMMANDS["/categories"],
         reply_markup=all_categories_keyboard(categories)
     )
@@ -128,7 +138,3 @@ async def delete_category(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(text=CATEGORIES_LEXICON["category_deleted"])
 
 
-@router.callback_query(F.data == "exit")
-async def close_keyboard(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(default_state)
-    await callback.message.delete()
