@@ -27,14 +27,6 @@ router.callback_query.middleware(AuthMiddleware())
 task_service = TaskService()
 
 
-@user_router.message(Command(commands="test_calendar"))
-async def test_calendar(message: Message):
-    await message.answer(
-        text=TASKS_LEXICON["get_date"],
-        reply_markup=tasks_calendar_keyboard()
-    )
-
-
 @router.callback_query(F.data == "tasks_menu")
 async def show_tasks_menu(callback: CallbackQuery):
     await callback.message.answer(
@@ -146,8 +138,22 @@ async def set_new_task_priority(callback: CallbackQuery, state: FSMContext):
     )
 
 
+@router.callback_query(F.data[:20] == "show_category_tasks_", StateFilter(default_state))
+async def get_tasks_from_category(callback: CallbackQuery, state: FSMContext):
+    category_id = int(callback.data[20:])
+    user_data = await state.get_data()
+    await state.set_state(TaskState.show_task)
+
+    category = await category_service.get_category(category_id, user_data["access_token"])
+    tasks = category["tasks"]
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["tasks_from_category"].format(name=category["name"]), parse_mode="Markdown",
+        reply_markup=show_tasks_keyboard(tasks)
+    )
+
+
 @router.callback_query(F.data == "edit_task_category", StateFilter(TaskState.show_task))
-async def edit_category(callback: CallbackQuery, state: FSMContext):
+async def edit_task_category(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_category)
     user_data = await state.get_data()
     categories = await category_service.get_categories(user_data["access_token"])
@@ -212,7 +218,7 @@ async def get_tasks(message: Message, state: FSMContext):
         tasks = [task for task in tasks if not task["completed"]]
     elif message.text == "/completed_tasks":
         tasks = [task for task in tasks if task["completed"]]
-    tasks.sort(key=lambda x: x["date"], reverse=True)
+    tasks.sort(key=lambda x: datetime.datetime.strptime(x["date"], '%Y-%m-%d'), reverse=True)
 
     await state.set_state(TaskState.show_task)
     await message.answer(
@@ -244,7 +250,7 @@ async def get_tasks(callback: CallbackQuery, state: FSMContext):
         tasks = [task for task in tasks if not task["completed"]]
     elif callback.data == "show_tasks_completed":
         tasks = [task for task in tasks if task["completed"]]
-    tasks.sort(key=lambda x: x["date"], reverse=True)
+    tasks.sort(key=lambda x: datetime.datetime.strptime(x["date"], '%Y-%m-%d'), reverse=True)
 
     await state.set_state(TaskState.show_task)
     await callback.message.edit_text(
@@ -273,7 +279,7 @@ async def start_delete_task(callback: CallbackQuery, state: FSMContext):
     await state.update_data(task_id=task_id)
     await state.set_state(TaskState.delete_task)
     await callback.message.edit_text(
-        text=TASKS_LEXICON["delete_task_confirmation"].format(task_id=task_id),
+        text=TASKS_LEXICON["delete_task_confirmation"],
         reply_markup=yes_no_keyboard()
     )
 
@@ -283,7 +289,7 @@ async def cancel_delete_task(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.show_task)
     user_data = await state.get_data()
 
-    task = await task_service.change_task_status(user_data["task_id"], user_data["access_token"])
+    task = await task_service.get_task_by_id(user_data["task_id"], user_data["access_token"])
     task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
 
     await callback.message.edit_text(text=TASKS_LEXICON["cancel_delete"])
@@ -459,4 +465,14 @@ async def set_month(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         text=TASKS_LEXICON["get_date"],
         reply_markup=tasks_calendar_keyboard(datetime.date(year, month, 1))
+    )
+
+
+@router.callback_query(StateFilter(TaskState))
+async def states_error(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(cur_state=await state.get_state())
+    await state.set_state(TaskState.kill_state)
+    await callback.message.edit_text(
+        text=TASKS_LEXICON["error_state"], parse_mode="Markdown",
+        reply_markup=yes_no_keyboard()
     )

@@ -6,7 +6,7 @@ from aiogram.fsm.state import default_state
 
 from .services import CategoryService
 from .lexicon import LEXICON as CATEGORIES_LEXICON, LEXICON_COMMANDS as CATEGORIES_LEXICON_COMMANDS
-from .keyboards import all_categories_keyboard, show_category_keyboard, choose_category_color
+from .keyboards import all_categories_keyboard, category_about_keyboard, yes_no_keyboard
 from .states import CategoryState
 
 from utils.middleware import AuthMiddleware
@@ -20,7 +20,7 @@ category_service = CategoryService()
 @router.message(Command(commands="categories"), StateFilter(default_state))
 async def get_categories(message: Message, state: FSMContext):
     user_data = await state.get_data()
-    categories = await category_service.get_categories(user_data["access_token"])
+    categories = await category_service.get_categories_without_base(user_data["access_token"])
     await message.answer(
         text=CATEGORIES_LEXICON_COMMANDS[message.text],
         reply_markup=all_categories_keyboard(categories)
@@ -30,8 +30,18 @@ async def get_categories(message: Message, state: FSMContext):
 @router.callback_query(F.data == "show_categories", StateFilter(default_state))
 async def get_categories(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
-    categories = await category_service.get_categories(user_data["access_token"])
+    categories = await category_service.get_categories_without_base(user_data["access_token"])
     await callback.message.answer(
+        text=CATEGORIES_LEXICON_COMMANDS["/categories"],
+        reply_markup=all_categories_keyboard(categories)
+    )
+
+
+@router.callback_query(F.data == "back_to_categories", StateFilter(default_state))
+async def get_categories(callback: CallbackQuery, state: FSMContext):
+    user_data = await state.get_data()
+    categories = await category_service.get_categories_without_base(user_data["access_token"])
+    await callback.message.edit_text(
         text=CATEGORIES_LEXICON_COMMANDS["/categories"],
         reply_markup=all_categories_keyboard(categories)
     )
@@ -44,37 +54,26 @@ async def get_category(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         text=CATEGORIES_LEXICON["category_info"].format(name=category["name"]),
         parse_mode="Markdown",
-        reply_markup=show_category_keyboard(category["id"])
+        reply_markup=category_about_keyboard(category["id"])
     )
 
 
 @router.message(Command(commands="create_category"), StateFilter(default_state))
-async def create_category(message: Message, state: FSMContext):
+async def start_create_category(message: Message, state: FSMContext):
     await message.answer(text=CATEGORIES_LEXICON_COMMANDS[message.text])
     await state.set_state(CategoryState.get_name)
 
 
 @router.message(StateFilter(CategoryState.get_name))
-async def get_category_name(message: Message, state: FSMContext):
-    await state.update_data(category_name=message.text)
-    await message.answer(
-        text=CATEGORIES_LEXICON["choose_category_color"],
-        reply_markup=choose_category_color()
-    )
-    await state.set_state(CategoryState.get_color)
-
-
-@router.callback_query(F.data[:15] == "category_color_", StateFilter(CategoryState.get_color))
-async def get_category_color(callback: CallbackQuery, state: FSMContext):
+async def finish_create_category(message: Message, state: FSMContext):
     user_data = await state.get_data()
-    new_category = await category_service.create_category(
-        user_data["category_name"], callback.data[15:], user_data["access_token"]
-    )
     await state.set_state(default_state)
-    await callback.message.edit_text(
+
+    new_category = await category_service.create_category(message.text, user_data["access_token"])
+    await message.answer(
         text=CATEGORIES_LEXICON["successful_created"].format(name=new_category["name"]),
         parse_mode="Markdown",
-        reply_markup=show_category_keyboard(new_category["id"])
+        reply_markup=category_about_keyboard(new_category["id"])
     )
 
 
@@ -101,11 +100,41 @@ async def set_new_name(message: Message, state: FSMContext):
     await message.answer(
         text=CATEGORIES_LEXICON["successful_updated"].format(name=message.text),
         parse_mode="Markdown",
-        reply_markup=show_category_keyboard(user_data["category_id"])
+        reply_markup=category_about_keyboard(user_data["category_id"])
     )
 
 
-@router.callback_query(F.data == "exit")
-async def close_keyboard(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data[:16] == "delete_category_", StateFilter(default_state))
+async def start_delete_category(callback: CallbackQuery, state: FSMContext):
+    category_id = int(callback.data[16:])
+    await state.update_data(category_id=category_id)
+    await state.set_state(CategoryState.delete_category)
+    await callback.message.edit_text(
+        text=CATEGORIES_LEXICON["delete_category_confirmation"],
+        reply_markup=yes_no_keyboard()
+    )
+
+
+@router.callback_query(F.data == "no", StateFilter(CategoryState.delete_category))
+async def cancel_delete_category(callback: CallbackQuery, state: FSMContext):
     await state.set_state(default_state)
-    await callback.message.delete()
+    user_data = await state.get_data()
+
+    category = await category_service.get_category(user_data["category_id"], user_data["access_token"])
+    await callback.message.edit_text(text=CATEGORIES_LEXICON["cancel_delete"])
+    await callback.message.answer(
+        text=CATEGORIES_LEXICON["category_info"].format(name=category["name"]),
+        parse_mode="Markdown",
+        reply_markup=category_about_keyboard(category["id"])
+    )
+
+
+@router.callback_query(F.data == "yes", StateFilter(CategoryState.delete_category))
+async def delete_category(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(default_state)
+    user_data = await state.get_data()
+
+    await category_service.delete_category(user_data["category_id"], user_data["access_token"])
+    await callback.message.edit_text(text=CATEGORIES_LEXICON["category_deleted"])
+
+
