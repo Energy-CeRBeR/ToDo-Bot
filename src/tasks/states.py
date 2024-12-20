@@ -9,11 +9,11 @@ class TaskState(StatesGroup):
     get_date = State()
     get_year = State()
     get_month = State()
-    show_task = State()
-    delete_task = State()
+
     edit_name = State()
     edit_description = State()
     edit_priority = State()
     edit_category = State()
     edit_date = State()
-    kill_state = State()
+
+    delete_task = State()
