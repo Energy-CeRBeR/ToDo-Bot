@@ -35,8 +35,8 @@ async def show_tasks_menu(callback: CallbackQuery):
     )
 
 
-@router.callback_query(F.data[:15] == "edit_task_menu_", StateFilter(TaskState.show_task))
-async def edit_task_menu(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data[:15] == "edit_task_menu_")
+async def show_edit_task_menu(callback: CallbackQuery, state: FSMContext):
     task_id = int(callback.data[15:])
     await state.update_data(task_id=task_id)
     await callback.message.edit_text(
@@ -45,14 +45,14 @@ async def edit_task_menu(callback: CallbackQuery, state: FSMContext):
     )
 
 
-@router.callback_query(F.data == "edit_task_name", StateFilter(TaskState.show_task))
-async def edit_name(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == "edit_task_name")
+async def edit_task_name(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_name)
     await callback.message.edit_text(text=TASKS_LEXICON["get_name"])
 
 
 @router.message(StateFilter(TaskState.edit_name))
-async def set_name(message: Message, state: FSMContext):
+async def set_task_name(message: Message, state: FSMContext):
     user_data = await state.get_data()
     task_id = user_data["task_id"]
     task = await task_service.get_task_by_id(task_id, user_data["access_token"])
@@ -62,7 +62,7 @@ async def set_name(message: Message, state: FSMContext):
     task = await task_service.edit_task(task_id, data, user_data["access_token"])
     task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
 
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
     await message.answer(text=TASKS_LEXICON["name_edited"])
     await message.answer(
         text=create_task_about_text(task, task_category), parse_mode="Markdown",
@@ -70,7 +70,7 @@ async def set_name(message: Message, state: FSMContext):
     )
 
 
-@router.callback_query(F.data == "edit_task_description", StateFilter(TaskState.show_task))
+@router.callback_query(F.data == "edit_task_description")
 async def edit_description(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_description)
     await callback.message.edit_text(
@@ -86,7 +86,7 @@ async def no_edit_description(callback: CallbackQuery, state: FSMContext):
     task = await task_service.get_task_by_id(user_data["task_id"], user_data["access_token"])
     task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
 
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
     await callback.message.edit_text(
         text=create_task_about_text(task, task_category), parse_mode="Markdown",
         reply_markup=task_about_keyboard(task["id"], task["completed"])
@@ -103,7 +103,7 @@ async def set_new_task_description(message: Message, state: FSMContext):
     task = await task_service.edit_task(task_id, data, user_data["access_token"])
     task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
 
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
     await message.answer(text=TASKS_LEXICON["description_edited"])
     await message.answer(
         text=create_task_about_text(task, task_category), parse_mode="Markdown",
@@ -111,7 +111,7 @@ async def set_new_task_description(message: Message, state: FSMContext):
     )
 
 
-@router.callback_query(F.data == "edit_task_priority", StateFilter(TaskState.show_task))
+@router.callback_query(F.data == "edit_task_priority")
 async def edit_priority(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_priority)
     await callback.message.edit_text(
@@ -130,7 +130,7 @@ async def set_new_task_priority(callback: CallbackQuery, state: FSMContext):
     task = await task_service.edit_task(task_id, data, user_data["access_token"])
     task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
 
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
     await callback.message.edit_text(text=TASKS_LEXICON["priority_edited"])
     await callback.message.answer(
         text=create_task_about_text(task, task_category), parse_mode="Markdown",
@@ -138,11 +138,10 @@ async def set_new_task_priority(callback: CallbackQuery, state: FSMContext):
     )
 
 
-@router.callback_query(F.data[:20] == "show_category_tasks_", StateFilter(default_state))
+@router.callback_query(F.data[:20] == "show_category_tasks_")
 async def get_tasks_from_category(callback: CallbackQuery, state: FSMContext):
     category_id = int(callback.data[20:])
     user_data = await state.get_data()
-    await state.set_state(TaskState.show_task)
 
     category = await category_service.get_category(category_id, user_data["access_token"])
     tasks = category["tasks"]
@@ -152,7 +151,7 @@ async def get_tasks_from_category(callback: CallbackQuery, state: FSMContext):
     )
 
 
-@router.callback_query(F.data == "edit_task_category", StateFilter(TaskState.show_task))
+@router.callback_query(F.data == "edit_task_category")
 async def edit_task_category(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_category)
     user_data = await state.get_data()
@@ -174,7 +173,7 @@ async def set_new_task_category(callback: CallbackQuery, state: FSMContext):
     task = await task_service.edit_task(task_id, data, user_data["access_token"])
     task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
 
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
     await callback.message.edit_text(text=TASKS_LEXICON["category_edited"])
     await callback.message.answer(
         text=create_task_about_text(task, task_category), parse_mode="Markdown",
@@ -182,7 +181,7 @@ async def set_new_task_category(callback: CallbackQuery, state: FSMContext):
     )
 
 
-@router.callback_query(F.data == "edit_task_date", StateFilter(TaskState.show_task))
+@router.callback_query(F.data == "edit_task_date")
 async def edit_date(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_date)
     await callback.message.edit_text(
@@ -201,7 +200,7 @@ async def set_new_task_date(callback: CallbackQuery, state: FSMContext):
     task = await task_service.edit_task(task_id, data, user_data["access_token"])
     task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
 
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
     await callback.message.edit_text(text=TASKS_LEXICON["date_edited"])
     await callback.message.answer(
         text=create_task_about_text(task, task_category), parse_mode="Markdown",
@@ -220,14 +219,13 @@ async def get_tasks(message: Message, state: FSMContext):
         tasks = [task for task in tasks if task["completed"]]
     tasks.sort(key=lambda x: datetime.datetime.strptime(x["date"], '%Y-%m-%d'), reverse=True)
 
-    await state.set_state(TaskState.show_task)
     await message.answer(
         text=TASKS_LEXICON_COMMANDS[message.text],
         reply_markup=show_tasks_keyboard(tasks)
     )
 
 
-@router.callback_query(F.data[:9] == "get_task_", StateFilter(TaskState.show_task))
+@router.callback_query(F.data[:9] == "get_task_")
 async def get_task_about(callback: CallbackQuery, state: FSMContext):
     task_id = int(callback.data[9:])
     user_data = await state.get_data()
@@ -252,14 +250,13 @@ async def get_tasks(callback: CallbackQuery, state: FSMContext):
         tasks = [task for task in tasks if task["completed"]]
     tasks.sort(key=lambda x: datetime.datetime.strptime(x["date"], '%Y-%m-%d'), reverse=True)
 
-    await state.set_state(TaskState.show_task)
     await callback.message.edit_text(
         text=TASKS_LEXICON_COMMANDS[f"/{callback.data[11:]}_tasks"],
         reply_markup=show_tasks_keyboard(tasks)
     )
 
 
-@router.callback_query(F.data[:17] == "edit_task_status_", StateFilter(TaskState.show_task))
+@router.callback_query(F.data[:17] == "edit_task_status_")
 async def edit_task_status(callback: CallbackQuery, state: FSMContext):
     task_id = int(callback.data[17:])
     user_data = await state.get_data()
@@ -273,7 +270,7 @@ async def edit_task_status(callback: CallbackQuery, state: FSMContext):
     )
 
 
-@router.callback_query(F.data[:12] == "delete_task_", StateFilter(TaskState.show_task))
+@router.callback_query(F.data[:12] == "delete_task_")
 async def start_delete_task(callback: CallbackQuery, state: FSMContext):
     task_id = int(callback.data[12:])
     await state.update_data(task_id=task_id)
@@ -286,7 +283,7 @@ async def start_delete_task(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "no", StateFilter(TaskState.delete_task))
 async def cancel_delete_task(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
     user_data = await state.get_data()
 
     task = await task_service.get_task_by_id(user_data["task_id"], user_data["access_token"])
@@ -310,14 +307,14 @@ async def delete_task(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "get_tasks_from_day")
 async def select_day_for_show_task(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
     await callback.message.edit_text(
         text=TASKS_LEXICON["get_date"],
         reply_markup=tasks_calendar_keyboard()
     )
 
 
-@router.callback_query(F.data[:13] == "calendar_get_", StateFilter(TaskState.show_task, default_state))
+@router.callback_query(F.data[:13] == "calendar_get_")
 async def show_task_from_day(callback: CallbackQuery, state: FSMContext):
     date = callback.data[13:]
     user_data = await state.get_data()
@@ -414,7 +411,7 @@ async def set_task_date(callback: CallbackQuery, state: FSMContext):
         text=create_task_about_text(task, task_category), parse_mode="Markdown",
         reply_markup=task_about_keyboard(task["id"], task["completed"])
     )
-    await state.set_state(TaskState.show_task)
+    await state.set_state(default_state)
 
 
 @user_router.callback_query(F.data[:14] == "calendar_page_")
@@ -465,14 +462,4 @@ async def set_month(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         text=TASKS_LEXICON["get_date"],
         reply_markup=tasks_calendar_keyboard(datetime.date(year, month, 1))
-    )
-
-
-@router.callback_query(StateFilter(TaskState))
-async def states_error(callback: CallbackQuery, state: FSMContext):
-    await state.update_data(cur_state=await state.get_state())
-    await state.set_state(TaskState.kill_state)
-    await callback.message.edit_text(
-        text=TASKS_LEXICON["error_state"], parse_mode="Markdown",
-        reply_markup=yes_no_keyboard()
     )
