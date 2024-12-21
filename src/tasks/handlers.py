@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import default_state
 
+from config_data.config import MAX_OBJECTS_ON_PAGE
 from .services import TaskService
 from .lexicon import LEXICON as TASKS_LEXICON, LEXICON_COMMANDS as TASKS_LEXICON_COMMANDS, create_task_about_text
 from .keyboards import show_tasks_keyboard, add_description_keyboard, select_priority_keyboard, \
@@ -156,10 +157,12 @@ async def edit_task_category(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_category)
     user_data = await state.get_data()
     categories = await category_service.get_categories(user_data["access_token"])
+    pages = len(categories) // MAX_OBJECTS_ON_PAGE + int(len(categories) % MAX_OBJECTS_ON_PAGE != 0)
 
+    await state.update_data(categories_list=categories, categories_pages=pages, cur_page=1)
     await callback.message.edit_text(
-        text=TASKS_LEXICON["get_category"],
-        reply_markup=all_categories_keyboard_for_tasks(categories)
+        text=TASKS_LEXICON["get_category"].format(page=1, pages=pages),
+        reply_markup=all_categories_keyboard_for_tasks(categories[:MAX_OBJECTS_ON_PAGE])
     )
 
 

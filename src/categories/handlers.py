@@ -10,6 +10,8 @@ from .keyboards import all_categories_keyboard, category_about_keyboard, yes_no_
 from .states import CategoryState
 
 from utils.middleware import AuthMiddleware
+from utils.universal_lexicon import LEXICON as UNIVERSAL_LEXICON
+from config_data.config import MAX_OBJECTS_ON_PAGE
 
 router = Router()
 router.message.middleware(AuthMiddleware())
@@ -21,33 +23,74 @@ category_service = CategoryService()
 async def get_categories(message: Message, state: FSMContext):
     user_data = await state.get_data()
     categories = await category_service.get_categories_without_base(user_data["access_token"])
+    pages = len(categories) // MAX_OBJECTS_ON_PAGE + int(len(categories) % MAX_OBJECTS_ON_PAGE != 0)
+
+    await state.update_data(categories_list=categories, categories_pages=pages, cur_page=1)
     await message.answer(
-        text=CATEGORIES_LEXICON_COMMANDS[message.text],
-        reply_markup=all_categories_keyboard(categories)
+        text=CATEGORIES_LEXICON_COMMANDS[message.text].format(page=1, pages=pages),
+        reply_markup=all_categories_keyboard(categories[:MAX_OBJECTS_ON_PAGE])
     )
 
 
-@router.callback_query(F.data == "show_categories", StateFilter(default_state))
+@router.callback_query(lambda c: c.data in ("show_categories", "back_to_categories"), StateFilter(default_state))
 async def get_categories(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     categories = await category_service.get_categories_without_base(user_data["access_token"])
-    await callback.message.answer(
-        text=CATEGORIES_LEXICON_COMMANDS["/categories"],
-        reply_markup=all_categories_keyboard(categories)
-    )
+    pages = len(categories) // MAX_OBJECTS_ON_PAGE + int(len(categories) % MAX_OBJECTS_ON_PAGE != 0)
+
+    await state.update_data(categories_list=categories, categories_pages=pages, cur_page=1)
+    if callback.data == "show_categories":
+        await callback.message.answer(
+            text=CATEGORIES_LEXICON_COMMANDS["/categories"].format(page=1, pages=pages),
+            reply_markup=all_categories_keyboard(categories[:MAX_OBJECTS_ON_PAGE])
+        )
+    else:
+        await callback.message.edit_text(
+            text=CATEGORIES_LEXICON_COMMANDS["/categories"].format(page=1, pages=pages),
+            reply_markup=all_categories_keyboard(categories[:MAX_OBJECTS_ON_PAGE])
+        )
 
 
-@router.callback_query(F.data == "back_to_categories", StateFilter(default_state))
-async def get_categories(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(lambda c: c.data in ("next_cat_page", "prev_cat_page"))
+async def next_cat_page(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
-    categories = await category_service.get_categories_without_base(user_data["access_token"])
+    categories = user_data["categories_list"]
+    pages = user_data["categories_pages"]
+    cur_page = user_data["cur_page"]
+
+    if callback.data == "next_cat_page":
+        if cur_page < pages:
+            cur_page += 1
+            await state.update_data(cur_page=cur_page)
+        else:
+            await callback.answer(
+                text=UNIVERSAL_LEXICON["no_next_page"],
+                reply_markup=all_categories_keyboard(
+                    categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
+                )
+            )
+
+    else:
+        if cur_page > 1:
+            cur_page -= 1
+            await state.update_data(cur_page=cur_page)
+        else:
+            await callback.answer(
+                text=UNIVERSAL_LEXICON["no_prev_page"],
+                reply_markup=all_categories_keyboard(
+                    categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
+                )
+            )
+
     await callback.message.edit_text(
-        text=CATEGORIES_LEXICON_COMMANDS["/categories"],
-        reply_markup=all_categories_keyboard(categories)
+        text=CATEGORIES_LEXICON_COMMANDS["/categories"].format(page=cur_page, pages=pages),
+        reply_markup=all_categories_keyboard(
+            categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
+        )
     )
 
 
-@router.callback_query(F.data[:13] == "get_category_", StateFilter(default_state))
+@router.callback_query(F.data[:13] == "get_category_")
 async def get_category(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     category = await category_service.get_category(int(callback.data[13:]), user_data["access_token"])
@@ -58,7 +101,7 @@ async def get_category(callback: CallbackQuery, state: FSMContext):
     )
 
 
-@router.message(Command(commands="create_category"), StateFilter(default_state))
+@router.message(Command(commands="create_category"))
 async def start_create_category(message: Message, state: FSMContext):
     await message.answer(text=CATEGORIES_LEXICON_COMMANDS[message.text])
     await state.set_state(CategoryState.get_name)
@@ -77,7 +120,7 @@ async def finish_create_category(message: Message, state: FSMContext):
     )
 
 
-@router.callback_query(F.data[:19] == "edit_category_name_", StateFilter(default_state))
+@router.callback_query(F.data[:19] == "edit_category_name_")
 async def edit_category_name(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     category_id = int(callback.data[19:])
@@ -104,7 +147,7 @@ async def set_new_name(message: Message, state: FSMContext):
     )
 
 
-@router.callback_query(F.data[:16] == "delete_category_", StateFilter(default_state))
+@router.callback_query(F.data[:16] == "delete_category_")
 async def start_delete_category(callback: CallbackQuery, state: FSMContext):
     category_id = int(callback.data[16:])
     await state.update_data(category_id=category_id)
@@ -136,5 +179,3 @@ async def delete_category(callback: CallbackQuery, state: FSMContext):
 
     await category_service.delete_category(user_data["category_id"], user_data["access_token"])
     await callback.message.edit_text(text=CATEGORIES_LEXICON["category_deleted"])
-
-

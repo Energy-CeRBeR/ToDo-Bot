@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from environs import Env
 
+MAX_OBJECTS_ON_PAGE = 10
+
 
 @dataclass
 class TgBot:

@@ -20,7 +20,7 @@ def all_categories_keyboard(categories: List[Dict]) -> InlineKeyboardMarkup:
     )
     back_page_button = InlineKeyboardButton(
         text=UNIVERSAL_LEXICON["back_page"],
-        callback_data="back_cat_page"
+        callback_data="prev_cat_page"
     )
     next_page_button = InlineKeyboardButton(
         text=UNIVERSAL_LEXICON["next_page"],

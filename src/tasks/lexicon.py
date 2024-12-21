@@ -37,7 +37,7 @@ LEXICON: dict = {
     "get_date": "Выберите дату задачи: ",
     "get_year": "Введите год: ",
     "get_month": "Введите месяц: ",
-    "get_category": "Выберите категорию для задачи:",
+    "get_category": "Выберите категорию для задачи.\nСтраница {page} / {pages}",
     "successful_create": "Задача успешно создана! ✅️",
     "no_add_description": "Не добавлять описание ❌",
     "low_priority": "Низкий",
