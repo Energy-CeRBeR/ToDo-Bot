@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from environs import Env
 
 MAX_OBJECTS_ON_PAGE = 10
+MAX_NAME_LENGTH = 50
+MAX_DESCRIPTION_LENGTH = 500
 
 
 @dataclass

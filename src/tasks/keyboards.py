@@ -56,7 +56,7 @@ def task_about_keyboard(task_id: int, task_status: bool) -> InlineKeyboardMarkup
     )
 
 
-def add_description_keyboard() -> InlineKeyboardMarkup:
+def no_add_description_keyboard() -> InlineKeyboardMarkup:
     no_add_button = InlineKeyboardButton(
         text=TASKS_LEXICON["no_add_description"],
         callback_data="no_add_description"

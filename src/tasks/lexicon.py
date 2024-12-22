@@ -75,6 +75,8 @@ LEXICON: dict = {
     "category_edited": "Категория задачи успешно обновлена! ✅",
     "date_edited": "Дата задачи успешно обновлена! ✅",
     "tasks_from_category": "Список задач из категории *{name}*\nСтраница {page} / {pages}",
+    "long_name_error": "❗ Название задачи не может превышать {max_length} символов ❗\nВведите новое название:",
+    "long_description_error": "❗ Описание задачи не может превышать {max_length} символов ❗\nВведите новое описание:"
 }
 
 LEXICON_COMMANDS: dict = {

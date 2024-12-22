@@ -7,10 +7,11 @@ LEXICON: dict[str, str] = {
     "successful_created": "Категория *{name}* успешно создана! ✅",
     "get_new_name": "Введите новое название для категории *{name}*:",
     "successful_updated": "Название успешно изменено! ✅\nВыбрана категория *{name}*",
-    "delete_category":  "Удалить категорию ❌",
+    "delete_category": "Удалить категорию ❌",
     "delete_category_confirmation": "❓ Вы действительно хотите удалить данную категорию ❓",
     "cancel_delete": "Операция удаления отменена! ✅",
     "category_deleted": "Категория успешно удалена! ✅",
+    "long_name_error": "❗ Название категории не может превышать {max_length} символов ❗\nВведите новое название:",
 }
 
 LEXICON_COMMANDS: dict = {
