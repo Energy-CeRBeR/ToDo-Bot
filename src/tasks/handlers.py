@@ -6,11 +6,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import default_state
 
-from config_data.config import MAX_OBJECTS_ON_PAGE
+from config_data.config import MAX_OBJECTS_ON_PAGE, MAX_NAME_LENGTH, MAX_DESCRIPTION_LENGTH
 from .services import TaskService
 from .lexicon import LEXICON as TASKS_LEXICON, LEXICON_COMMANDS as TASKS_LEXICON_COMMANDS, create_task_about_text
 from .states import TaskState
-from .keyboards import show_tasks_keyboard, add_description_keyboard, select_priority_keyboard, \
+from .keyboards import show_tasks_keyboard, no_add_description_keyboard, select_priority_keyboard, \
     tasks_calendar_keyboard, select_month_keyboard, tasks_menu_keyboard, task_about_keyboard, yes_no_keyboard, \
     task_edit_keyboard
 
@@ -159,13 +159,17 @@ async def set_task_category(callback: CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(TaskState.get_name))
 async def set_task_name(message: Message, state: FSMContext):
-    await state.update_data(task_name=message.text)
+    task_name = message.text
+    if len(task_name) > MAX_NAME_LENGTH:
+        await message.answer(text=TASKS_LEXICON["long_name_error"].format(max_length=MAX_NAME_LENGTH))
 
-    await message.answer(
-        text=TASKS_LEXICON["get_description"], parse_mode="Markdown",
-        reply_markup=add_description_keyboard()
-    )
-    await state.set_state(TaskState.get_description)
+    else:
+        await state.update_data(task_name=message.text)
+        await state.set_state(TaskState.get_description)
+        await message.answer(
+            text=TASKS_LEXICON["get_description"], parse_mode="Markdown",
+            reply_markup=no_add_description_keyboard()
+        )
 
 
 @router.callback_query(F.data == "no_add_description", StateFilter(TaskState.get_description))
@@ -180,12 +184,20 @@ async def no_add_description(callback: CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(TaskState.get_description))
 async def set_task_description(message: Message, state: FSMContext):
-    await state.update_data(task_description=message.text)
-    await message.answer(
-        text=TASKS_LEXICON["get_priority"],
-        reply_markup=select_priority_keyboard()
-    )
-    await state.set_state(TaskState.get_priority)
+    task_description = message.text
+    if len(task_description) > MAX_DESCRIPTION_LENGTH:
+        await message.answer(
+            text=TASKS_LEXICON["long_description_error"].format(max_length=MAX_DESCRIPTION_LENGTH),
+            reply_markup=no_add_description_keyboard()
+        )
+
+    else:
+        await state.update_data(task_description=task_description)
+        await message.answer(
+            text=TASKS_LEXICON["get_priority"],
+            reply_markup=select_priority_keyboard()
+        )
+        await state.set_state(TaskState.get_priority)
 
 
 @router.callback_query(F.data[-8:] == "priority", StateFilter(TaskState.get_priority))
@@ -291,22 +303,27 @@ async def edit_task_name(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(StateFilter(TaskState.edit_name))
-async def set_task_name(message: Message, state: FSMContext):
-    user_data = await state.get_data()
-    task_id = user_data["task_id"]
-    task = await task_service.get_task_by_id(task_id, user_data["access_token"])
+async def set_new_task_name(message: Message, state: FSMContext):
+    task_name = message.text
+    if len(task_name) > MAX_NAME_LENGTH:
+        await message.answer(text=TASKS_LEXICON["long_name_error"].format(max_length=MAX_NAME_LENGTH))
 
-    data = set_edited_task_data(task, "name", message.text)
+    else:
+        user_data = await state.get_data()
+        task_id = user_data["task_id"]
+        task = await task_service.get_task_by_id(task_id, user_data["access_token"])
 
-    task = await task_service.edit_task(task_id, data, user_data["access_token"])
-    task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
+        data = set_edited_task_data(task, "name", task_name)
 
-    await state.set_state(default_state)
-    await message.answer(text=TASKS_LEXICON["name_edited"])
-    await message.answer(
-        text=create_task_about_text(task, task_category), parse_mode="Markdown",
-        reply_markup=task_about_keyboard(task["id"], task["completed"])
-    )
+        task = await task_service.edit_task(task_id, data, user_data["access_token"])
+        task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
+
+        await state.set_state(default_state)
+        await message.answer(text=TASKS_LEXICON["name_edited"])
+        await message.answer(
+            text=create_task_about_text(task, task_category), parse_mode="Markdown",
+            reply_markup=task_about_keyboard(task["id"], task["completed"])
+        )
 
 
 @router.callback_query(F.data == "edit_task_description")
@@ -314,7 +331,7 @@ async def edit_description(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TaskState.edit_description)
     await callback.message.edit_text(
         text=TASKS_LEXICON["get_description"],
-        reply_markup=add_description_keyboard()
+        reply_markup=no_add_description_keyboard()
     )
 
 
@@ -337,20 +354,28 @@ async def no_edit_description(callback: CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(TaskState.edit_description))
 async def set_new_task_description(message: Message, state: FSMContext):
-    user_data = await state.get_data()
-    task_id = user_data["task_id"]
-    task = await task_service.get_task_by_id(task_id, user_data["access_token"])
+    task_description = message.text
+    if len(task_description) > MAX_DESCRIPTION_LENGTH:
+        await message.answer(
+            text=TASKS_LEXICON["long_description_error"].format(max_length=MAX_DESCRIPTION_LENGTH),
+            reply_markup=no_add_description_keyboard()
+        )
 
-    data = set_edited_task_data(task, "description", message.text)
-    task = await task_service.edit_task(task_id, data, user_data["access_token"])
-    task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
+    else:
+        user_data = await state.get_data()
+        task_id = user_data["task_id"]
+        task = await task_service.get_task_by_id(task_id, user_data["access_token"])
 
-    await state.set_state(default_state)
-    await message.answer(text=TASKS_LEXICON["description_edited"])
-    await message.answer(
-        text=create_task_about_text(task, task_category), parse_mode="Markdown",
-        reply_markup=task_about_keyboard(task["id"], task["completed"])
-    )
+        data = set_edited_task_data(task, "description", task_description)
+        task = await task_service.edit_task(task_id, data, user_data["access_token"])
+        task_category = await category_service.get_category(task["category_id"], user_data["access_token"])
+
+        await state.set_state(default_state)
+        await message.answer(text=TASKS_LEXICON["description_edited"])
+        await message.answer(
+            text=create_task_about_text(task, task_category), parse_mode="Markdown",
+            reply_markup=task_about_keyboard(task["id"], task["completed"])
+        )
 
 
 @router.callback_query(F.data == "edit_task_priority")

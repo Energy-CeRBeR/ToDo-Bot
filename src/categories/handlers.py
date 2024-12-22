@@ -12,7 +12,7 @@ from .states import CategoryState
 
 from utils.middleware import AuthMiddleware
 from utils.universal_lexicon import LEXICON as UNIVERSAL_LEXICON
-from config_data.config import MAX_OBJECTS_ON_PAGE
+from config_data.config import MAX_OBJECTS_ON_PAGE, MAX_NAME_LENGTH
 from src.tasks.lexicon import LEXICON as TASKS_LEXICON
 
 router = Router()
@@ -110,14 +110,19 @@ async def start_create_category(message: Message, state: FSMContext):
 @router.message(StateFilter(CategoryState.get_name))
 async def finish_create_category(message: Message, state: FSMContext):
     user_data = await state.get_data()
-    await state.set_state(default_state)
+    category_name = message.text
 
-    new_category = await category_service.create_category(message.text, user_data["access_token"])
-    await message.answer(
-        text=CATEGORIES_LEXICON["successful_created"].format(name=new_category["name"]),
-        parse_mode="Markdown",
-        reply_markup=category_about_keyboard(new_category["id"])
-    )
+    if len(category_name) > MAX_NAME_LENGTH:
+        await message.answer(text=CATEGORIES_LEXICON["long_name_error"].format(max_length=MAX_NAME_LENGTH))
+
+    else:
+        await state.set_state(default_state)
+        new_category = await category_service.create_category(message.text, user_data["access_token"])
+        await message.answer(
+            text=CATEGORIES_LEXICON["successful_created"].format(name=new_category["name"]),
+            parse_mode="Markdown",
+            reply_markup=category_about_keyboard(new_category["id"])
+        )
 
 
 @router.callback_query(F.data[:19] == "edit_category_name_")
@@ -136,15 +141,21 @@ async def edit_category_name(callback: CallbackQuery, state: FSMContext):
 @router.message(StateFilter(CategoryState.get_new_name))
 async def set_new_name(message: Message, state: FSMContext):
     user_data = await state.get_data()
-    new_category_data = {"name": message.text, "color": user_data["color"]}
-    await category_service.edit_category(user_data["category_id"], new_category_data, user_data["access_token"])
+    category_name = message.text
 
-    await state.set_state(default_state)
-    await message.answer(
-        text=CATEGORIES_LEXICON["successful_updated"].format(name=message.text),
-        parse_mode="Markdown",
-        reply_markup=category_about_keyboard(user_data["category_id"])
-    )
+    if len(category_name) > MAX_NAME_LENGTH:
+        await message.answer(text=CATEGORIES_LEXICON["long_name_error"].format(max_length=MAX_NAME_LENGTH))
+
+    else:
+        new_category_data = {"name": category_name, "color": user_data["color"]}
+        await category_service.edit_category(user_data["category_id"], new_category_data, user_data["access_token"])
+
+        await state.set_state(default_state)
+        await message.answer(
+            text=CATEGORIES_LEXICON["successful_updated"].format(name=message.text),
+            parse_mode="Markdown",
+            reply_markup=category_about_keyboard(user_data["category_id"])
+        )
 
 
 @router.callback_query(F.data[:16] == "delete_category_")
