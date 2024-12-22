@@ -59,18 +59,18 @@ async def show_task_from_day(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data[:11] == "show_tasks_", StateFilter(default_state))
 async def get_tasks(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
-
     tasks = await task_service.get_all_tasks(user_data["access_token"])
-    pages = len(tasks) // MAX_OBJECTS_ON_PAGE + int(len(tasks) % MAX_OBJECTS_ON_PAGE != 0)
-    await state.update_data(
-        tasks_list=tasks, tasks_pages=pages, cur_tasks_page=1, lexicon_data=f"/{callback.data[11:]}_tasks"
-    )
 
     if callback.data == "show_tasks_active":
         tasks = [task for task in tasks if not task["completed"]]
     elif callback.data == "show_tasks_completed":
         tasks = [task for task in tasks if task["completed"]]
+
     tasks.sort(key=lambda x: datetime.datetime.strptime(x["date"], '%Y-%m-%d'), reverse=True)
+    pages = len(tasks) // MAX_OBJECTS_ON_PAGE + int(len(tasks) % MAX_OBJECTS_ON_PAGE != 0)
+    await state.update_data(
+        tasks_list=tasks, tasks_pages=pages, cur_tasks_page=1, lexicon_data=f"/{callback.data[11:]}_tasks"
+    )
 
     await callback.message.edit_text(
         text=TASKS_LEXICON_COMMANDS[f"/{callback.data[11:]}_tasks"].format(page=1, pages=pages),
@@ -442,16 +442,16 @@ async def set_new_task_date(callback: CallbackQuery, state: FSMContext):
 @router.message(Command(commands=["all_tasks", "active_tasks", "completed_tasks"]), StateFilter(default_state))
 async def get_tasks(message: Message, state: FSMContext):
     user_data = await state.get_data()
-
     tasks = await task_service.get_all_tasks(user_data["access_token"])
-    pages = len(tasks) // MAX_OBJECTS_ON_PAGE + int(len(tasks) % MAX_OBJECTS_ON_PAGE != 0)
-    await state.update_data(tasks_list=tasks, tasks_pages=pages, cur_tasks_page=1, lexicon_data=message.text)
 
     if message.text == "/active_tasks":
         tasks = [task for task in tasks if not task["completed"]]
     elif message.text == "/completed_tasks":
         tasks = [task for task in tasks if task["completed"]]
+
     tasks.sort(key=lambda x: datetime.datetime.strptime(x["date"], '%Y-%m-%d'), reverse=True)
+    pages = len(tasks) // MAX_OBJECTS_ON_PAGE + int(len(tasks) % MAX_OBJECTS_ON_PAGE != 0)
+    await state.update_data(tasks_list=tasks, tasks_pages=pages, cur_tasks_page=1, lexicon_data=message.text)
 
     await message.answer(
         text=TASKS_LEXICON_COMMANDS[message.text].format(page=1, pages=pages),
