@@ -64,36 +64,30 @@ async def change_page(callback: CallbackQuery, state: FSMContext):
     keyboard = all_categories_keyboard if cur_state is None else all_categories_keyboard_for_tasks
     text = CATEGORIES_LEXICON_COMMANDS["/categories"] if cur_state is None else TASKS_LEXICON["get_category"]
 
+    change_keyboard_flag = True
     if callback.data == "next_cat_page":
         if cur_page < pages:
             cur_page += 1
             await state.update_data(cur_page=cur_page)
         else:
-            await callback.answer(
-                text=UNIVERSAL_LEXICON["no_next_page"],
-                reply_markup=keyboard(
-                    categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
-                )
-            )
+            change_keyboard_flag = False
+            await callback.answer(text=UNIVERSAL_LEXICON["no_next_page"])
 
     else:
         if cur_page > 1:
             cur_page -= 1
             await state.update_data(cur_page=cur_page)
         else:
-            await callback.answer(
-                text=UNIVERSAL_LEXICON["no_prev_page"],
-                reply_markup=keyboard(
-                    categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
-                )
-            )
+            change_keyboard_flag = False
+            await callback.answer(text=UNIVERSAL_LEXICON["no_prev_page"])
 
-    await callback.message.edit_text(
-        text=text.format(page=cur_page, pages=pages),
-        reply_markup=keyboard(
-            categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
+    if change_keyboard_flag:
+        await callback.message.edit_text(
+            text=text.format(page=cur_page, pages=pages),
+            reply_markup=keyboard(
+                categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
+            )
         )
-    )
 
 
 @router.callback_query(F.data[:13] == "get_category_", StateFilter(default_state))
