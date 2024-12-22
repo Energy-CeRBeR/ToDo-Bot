@@ -30,7 +30,10 @@ async def cerber_auth(message: Message, state: FSMContext):
         user_data = await state.get_data()
         user_dict = await user_service.get_current_user(user_data.setdefault("access_token", "default"))
         await message.answer(
-            text=USER_LEXICON_COMMANDS["/profile"](user_dict), reply_markup=profile_keyboard(), parse_mode="Markdown"
+            text=USER_LEXICON_COMMANDS["/profile"].format(
+                name=user_dict["name"], surname=user_dict["surname"], email=user_dict["email"]
+            ), parse_mode="Markdown",
+            reply_markup=profile_keyboard()
         )
 
     else:
@@ -79,7 +82,10 @@ async def get_password(message: Message, state: FSMContext):
         user_data = await state.get_data()
         user_dict = await user_service.get_current_user(user_data.setdefault("access_token", "default"))
         await message.answer(
-            text=USER_LEXICON_COMMANDS["/profile"](user_dict), reply_markup=profile_keyboard(), parse_mode="Markdown"
+            text=USER_LEXICON_COMMANDS["/profile"].format(
+                name=user_dict["name"], surname=user_dict["surname"], email=user_dict["email"]
+            ), parse_mode="Markdown",
+            reply_markup=profile_keyboard()
         )
 
     else:
@@ -93,7 +99,10 @@ async def show_profile(message: Message, state: FSMContext):
 
     if user_dict:
         await message.answer(
-            text=USER_LEXICON_COMMANDS[message.text](user_dict), reply_markup=profile_keyboard(), parse_mode="Markdown"
+            text=USER_LEXICON_COMMANDS[message.text].format(
+                name=user_dict["name"], surname=user_dict["surname"], email=user_dict["email"]
+            ), parse_mode="Markdown",
+            reply_markup=profile_keyboard()
         )
     else:
         await message.answer(text=USER_LEXICON["not_auth"])
@@ -105,8 +114,10 @@ async def start_logout(message: Message, state: FSMContext):
     user_dict = await user_service.get_current_user(user_data.setdefault("access_token", "default"))
 
     if user_dict:
-        await message.answer(text=USER_LEXICON_COMMANDS[message.text]["confirm"],
-                             reply_markup=yes_no_keyboard("logout"))
+        await message.answer(
+            text=USER_LEXICON_COMMANDS[message.text]["confirm"],
+            reply_markup=yes_no_keyboard("logout")
+        )
     else:
         await message.answer(text=USER_LEXICON_COMMANDS[message.text]["already_logout"])
 
