@@ -6,12 +6,14 @@ from aiogram.fsm.state import default_state
 
 from .services import CategoryService
 from .lexicon import LEXICON as CATEGORIES_LEXICON, LEXICON_COMMANDS as CATEGORIES_LEXICON_COMMANDS
-from .keyboards import all_categories_keyboard, category_about_keyboard, yes_no_keyboard
+from .keyboards import all_categories_keyboard, category_about_keyboard, yes_no_keyboard, \
+    all_categories_keyboard_for_tasks
 from .states import CategoryState
 
 from utils.middleware import AuthMiddleware
 from utils.universal_lexicon import LEXICON as UNIVERSAL_LEXICON
 from config_data.config import MAX_OBJECTS_ON_PAGE
+from src.tasks.lexicon import LEXICON as TASKS_LEXICON
 
 router = Router()
 router.message.middleware(AuthMiddleware())
@@ -52,11 +54,15 @@ async def get_categories(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(lambda c: c.data in ("next_cat_page", "prev_cat_page"))
-async def next_cat_page(callback: CallbackQuery, state: FSMContext):
+async def change_page(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     categories = user_data["categories_list"]
     pages = user_data["categories_pages"]
     cur_page = user_data["cur_page"]
+    cur_state = await state.get_state()
+
+    keyboard = all_categories_keyboard if cur_state is None else all_categories_keyboard_for_tasks
+    text = CATEGORIES_LEXICON_COMMANDS["/categories"] if cur_state is None else TASKS_LEXICON["get_category"]
 
     if callback.data == "next_cat_page":
         if cur_page < pages:
@@ -65,7 +71,7 @@ async def next_cat_page(callback: CallbackQuery, state: FSMContext):
         else:
             await callback.answer(
                 text=UNIVERSAL_LEXICON["no_next_page"],
-                reply_markup=all_categories_keyboard(
+                reply_markup=keyboard(
                     categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
                 )
             )
@@ -77,20 +83,20 @@ async def next_cat_page(callback: CallbackQuery, state: FSMContext):
         else:
             await callback.answer(
                 text=UNIVERSAL_LEXICON["no_prev_page"],
-                reply_markup=all_categories_keyboard(
+                reply_markup=keyboard(
                     categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
                 )
             )
 
     await callback.message.edit_text(
-        text=CATEGORIES_LEXICON_COMMANDS["/categories"].format(page=cur_page, pages=pages),
-        reply_markup=all_categories_keyboard(
+        text=text.format(page=cur_page, pages=pages),
+        reply_markup=keyboard(
             categories[(cur_page - 1) * MAX_OBJECTS_ON_PAGE: cur_page * MAX_OBJECTS_ON_PAGE]
         )
     )
 
 
-@router.callback_query(F.data[:13] == "get_category_")
+@router.callback_query(F.data[:13] == "get_category_", StateFilter(default_state))
 async def get_category(callback: CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     category = await category_service.get_category(int(callback.data[13:]), user_data["access_token"])
