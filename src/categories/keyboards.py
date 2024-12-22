@@ -18,16 +18,16 @@ def all_categories_keyboard(categories: List[Dict]) -> InlineKeyboardMarkup:
         text=UNIVERSAL_LEXICON["exit"],
         callback_data="exit"
     )
-    back_page_button = InlineKeyboardButton(
+    prev_page_button = InlineKeyboardButton(
         text=UNIVERSAL_LEXICON["back_page"],
-        callback_data="back_cat_page"
+        callback_data="prev_cat_page"
     )
     next_page_button = InlineKeyboardButton(
         text=UNIVERSAL_LEXICON["next_page"],
         callback_data="next_cat_page"
     )
 
-    return InlineKeyboardMarkup(inline_keyboard=[*buttons, [back_page_button, exit_button, next_page_button]])
+    return InlineKeyboardMarkup(inline_keyboard=[*buttons, [prev_page_button, exit_button, next_page_button]])
 
 
 def all_categories_keyboard_for_tasks(categories: List[Dict]) -> InlineKeyboardMarkup:
@@ -39,16 +39,16 @@ def all_categories_keyboard_for_tasks(categories: List[Dict]) -> InlineKeyboardM
         )
         buttons.append([cur_category])
 
-    back_page_button = InlineKeyboardButton(
+    prev_page_button = InlineKeyboardButton(
         text=UNIVERSAL_LEXICON["back_page"],
-        callback_data="back_cat_page"
+        callback_data="prev_cat_page"
     )
     next_page_button = InlineKeyboardButton(
         text=UNIVERSAL_LEXICON["next_page"],
         callback_data="next_cat_page"
     )
 
-    return InlineKeyboardMarkup(inline_keyboard=[*buttons, [back_page_button, next_page_button]])
+    return InlineKeyboardMarkup(inline_keyboard=[*buttons, [prev_page_button, next_page_button]])
 
 
 def category_about_keyboard(category_id: int) -> InlineKeyboardMarkup:
